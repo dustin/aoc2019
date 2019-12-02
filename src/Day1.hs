@@ -11,6 +11,8 @@ fuelFuelReq = sum . tail . takeWhile (> 0) . iterate fuelReq
 
 fuelReqs :: (Int -> Int) -> [Int] -> Int
 fuelReqs f = sum . fmap f
+-- fuelReqs f = foldr ((+) . f) 0
+-- fuelReqs f = getSum . foldMap (pure . f)
 
 part1 :: [Int] -> Int
 part1 = fuelReqs fuelReq
