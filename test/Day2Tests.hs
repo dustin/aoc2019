@@ -16,7 +16,7 @@ testPart2 :: Assertion
 testPart2 = assertEqual "" 6979 =<< part2 <$> getInput
 
 testEx :: Assertion
-testEx = assertEqual "" 3500 (V.head $ execute 0 (V.fromList [1,9,10,3,2,3,11,0,99,30,40,50]))
+testEx = assertEqual "" 3500 (V.head $ execute (V.fromList [1,9,10,3,2,3,11,0,99,30,40,50]))
 
 tests :: [TestTree]
 tests = [
