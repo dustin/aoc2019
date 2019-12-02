@@ -7,31 +7,37 @@ import qualified Data.Vector.Unboxed.Mutable as MV
 type Instructions = V.Vector Int
 
 -- Mutable vector in ST monad.
-execute :: Instructions -> Instructions
-execute ins = runST $ do
+executeWithin :: Int -> Instructions -> Either String Instructions
+executeWithin limit ins = runST $ do
   mv <- V.thaw ins
-  ex 0 mv
-  V.unsafeFreeze mv
+  e <- ex limit 0 mv
+  case e of
+    Left err -> pure (Left err)
+    Right _  -> pure . Right =<< V.unsafeFreeze mv
 
     where
-      ex :: Int -> MV.MVector s Int -> ST s ()
-      ex x xs = do
-        i <- MV.read xs x
+      ex :: Int -> Int -> MV.MVector s Int -> ST s (Either String ())
+      ex 0 _ _ = pure $ Left "timed out"
+      ex n pc xs = do
+        i <- MV.read xs pc
         case i of
-          99 -> pure ()
+          99 -> pure (Right ())
           1  -> op4 (+)
           2  -> op4 (*)
+          ic  -> pure $ Left ("invalid instruction at pos " <> show pc <> ": " <> show ic)
 
           where
             op4 o = do
-              a <- att (x + 1)
-              b <- att (x + 2)
-              dest <- MV.read xs (x + 3)
+              a <- att (pc + 1)
+              b <- att (pc + 2)
+              dest <- MV.read xs (pc + 3)
               MV.write xs dest (o a b)
-              ex (x + 4) xs
+              ex (n - 1) (pc + 4) xs
 
             att i = MV.read xs =<< MV.read xs i
 
+execute :: Instructions -> Either String Instructions
+execute = executeWithin 100000
 
 {- Immutable Vector version
 execute' :: Int -> Instructions -> Instructions
