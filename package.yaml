@@ -33,6 +33,7 @@ dependencies:
 - JuicyPixels
 - megaparsec
 - pqueue
+- lens
 
 library:
   source-dirs: src
