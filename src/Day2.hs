@@ -1,28 +1,34 @@
 module Day2 where
 
 import           Control.Lens
-import           Control.Monad   (guard)
-import           Data.List.Extra
+import           Control.Monad       (guard)
+import qualified Data.Vector.Unboxed as V
 
-getInput :: IO [Int]
-getInput = fmap read . words . map (\x -> if x == ',' then ' ' else x) <$> readFile "input/day2"
+type Instructions = V.Vector Int
 
-execute :: Int -> [Int] -> [Int]
-execute x xs = case drop x xs of
-                 (99:_)      -> xs
-                 (1:b:c:d:_) -> execute (x + 4) $ up (+) b c d
-                 (2:b:c:d:_) -> execute (x + 4) $ up (*) b c d
+getInput :: IO Instructions
+getInput = V.fromList . fmap read . words . map (\x -> if x == ',' then ' ' else x) <$> readFile "input/day2"
+
+execute :: Int -> Instructions -> Instructions
+execute x xs = case xs V.! x of
+                 99 -> xs
+                 1  -> op4 (+)
+                 2  -> op4 (*)
   where
-    up o n m d = xs & ix d .~ (o (xs !! n) (xs !! m))
+    op4 o = execute (x+4) (xs & ix dest .~ o opa opb)
+      where opa   = att 1
+            opb   = att 2
+            dest  = xs V.! (x + 3)
+            att n = xs V.! (xs V.! (x + n))
 
-runWith :: Int -> Int -> [Int] -> Int
-runWith a b xs = head $ execute 0 xs'
+runWith :: Int -> Int -> Instructions -> Int
+runWith a b xs = V.head $ execute 0 xs'
   where xs' = xs & ix 1 .~ a & ix 2 .~ b
 
-part1 :: [Int] -> Int
+part1 :: Instructions -> Int
 part1 = runWith 12 2
 
-part2 :: [Int] -> Int
+part2 :: Instructions -> Int
 part2 xs = head $ do
   a <- [0..100]
   b <- [0..100]
