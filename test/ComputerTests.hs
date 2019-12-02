@@ -1,4 +1,4 @@
-module Day2Tests where
+module ComputerTests where
 
 import qualified Data.Vector.Unboxed   as V
 import           Test.QuickCheck
@@ -8,16 +8,11 @@ import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck as QC
 
 import           Computer
-import           Day2
 
-testPart1 :: Assertion
-testPart1 = assertEqual "" 3931283 =<< part1 <$> getInput
-
-testPart2 :: Assertion
-testPart2 = assertEqual "" 6979 =<< part2 <$> getInput
+testD1Ex :: Assertion
+testD1Ex = assertEqual "" 3500 (V.head $ execute (V.fromList [1,9,10,3,2,3,11,0,99,30,40,50]))
 
 tests :: [TestTree]
 tests = [
-  testCase "part1" testPart1,
-  testCase "part2" testPart2
+  testCase "Day 1 Example" testD1Ex
   ]
