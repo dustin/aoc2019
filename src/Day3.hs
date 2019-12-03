@@ -28,17 +28,17 @@ getInput :: IO [Wire]
 getInput = parseFile parseAll "input/day3"
 
 path :: Wire -> [(Int,Int)]
-path w = go (0,0) [] w
-  where go _ l [] = l
-        go p l ((_,0):xs) = go p l xs
-        go (x,y) l ((d,dist):xs) = go (npos d) (npos d:l) ((d,dist-1):xs)
-          where npos R = (x+1, y)
-                npos L = (x-1, y)
-                npos U = (x,   y+1)
-                npos D = (x,   y-1)
+path = scanl1 plus . expand
+  where
+    (a1, b1) `plus` (a2, b2) = (a1 + a2, b1 + b2)
+    expand = concatMap (\(d,n) -> replicate n (dir d))
+    dir U = ( 0,  1)
+    dir D = ( 0, -1)
+    dir R = ( 1,  0)
+    dir L = (-1,  0)
 
 wireMap :: Wire -> Map (Int,Int) Int
-wireMap = Map.fromList . flip zip [1..] . reverse . path
+wireMap = Map.fromList . flip zip [1..] . path
 
 overlaps :: [Map (Int,Int) a] -> [(Int,Int)]
 overlaps = Map.keys . foldl1 Map.intersection
