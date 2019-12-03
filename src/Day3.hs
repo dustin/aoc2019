@@ -41,15 +41,15 @@ wireMap :: Wire -> Map (Int,Int) Int
 wireMap = Map.fromList . path
 
 overlaps :: [Map (Int,Int) Int] -> Map (Int,Int) Int
-overlaps = Map.unionsWith (+) . (fmap.fmap) (const 1)
+overlaps = foldl1 Map.intersection
 
 part1 :: [Wire] -> Int
 part1 wires = let maps = overlaps $ wireMap <$> wires
-                  ols = map (mdist2 (0,0) . fst) . filter ((> 1) . snd) $ Map.toList maps
+                  ols = (mdist2 (0,0) . fst) <$> Map.toList maps
               in minimum ols
 
 part2 :: [Wire] -> Int
 part2 wires = let maps = wireMap <$> wires
-                  olaps = Map.filter (> 1) . overlaps $ maps
+                  olaps = overlaps maps
                   dists = Map.mapWithKey (\k _ -> sum . fmap (Map.! k) $ maps) $ olaps
               in minimum dists
