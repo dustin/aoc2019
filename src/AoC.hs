@@ -10,7 +10,7 @@ Portability : POSIX
 Common stuff across AoC solutions.
 -}
 module AoC (
-  Parser, parseFile,
+  Parser, parseFile, parseLit,
   mdist2, mdist3, mdist4,
   zipt2, zipt3, zipt4
   ) where
@@ -26,6 +26,10 @@ type Parser = Parsec Void Text
 -- | Load a file (e.g. "input/day24") with the given parser.
 parseFile :: Parser a -> String -> IO a
 parseFile f s = pack <$> readFile s >>= either (fail.errorBundlePretty) pure . parse f s
+
+-- | Parse a literal example.
+parseLit :: Parser a -> Text -> a
+parseLit f s = either (error.errorBundlePretty) id (parse f "" s)
 
 -- | Parallel application of a function across elements of a tuple.
 zipt2 :: (a -> b -> c) -> (a,a) -> (b,b) -> (c,c)

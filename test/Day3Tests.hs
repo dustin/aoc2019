@@ -9,14 +9,12 @@ import           Test.Tasty
 import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck as QC
-import           Text.Megaparsec       (Parsec, parse)
-import           Text.Megaparsec.Error (errorBundlePretty)
 
 import           AoC
 import           Day3
 
 parseEx :: Text -> [Wire]
-parseEx s = either (fail.errorBundlePretty) id (parse parseAll "" s)
+parseEx = parseLit parseAll
 
 testEx :: Assertion
 testEx = assertEqual "" 6 (part1 . parseEx $ "R8,U5,L5,D3\nU7,R6,D4,L4\n")
