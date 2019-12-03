@@ -40,16 +40,16 @@ path w = go (0,0) [] w
 wireMap :: Wire -> Map (Int,Int) Int
 wireMap = Map.fromList . flip zip [1..] . reverse . path
 
-overlaps :: [Map (Int,Int) Int] -> Map (Int,Int) Int
-overlaps = foldl1 Map.intersection
+overlaps :: [Map (Int,Int) a] -> [(Int,Int)]
+overlaps = Map.keys . foldl1 Map.intersection
 
 part1 :: [Wire] -> Int
-part1 wires = let maps = overlaps $ wireMap <$> wires
-                  ols = (mdist2 (0,0) . fst) <$> Map.toList maps
+part1 wires = let olaps = overlaps $ wireMap <$> wires
+                  ols = mdist2 (0,0) <$> olaps
               in minimum ols
 
 part2 :: [Wire] -> Int
 part2 wires = let maps = wireMap <$> wires
                   olaps = overlaps maps
-                  dists = Map.mapWithKey (\k _ -> sum . fmap (Map.! k) $ maps) $ olaps
+                  dists = (\k -> sum . fmap (Map.! k) $ maps) <$> olaps
               in minimum dists
