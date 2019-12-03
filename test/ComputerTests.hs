@@ -19,7 +19,7 @@ testD2Ex :: Assertion
 testD2Ex = assertEqual "" 3500 (V.head $ fromRight undefined $ execute d1ex)
 
 testTimeout :: Assertion
-testTimeout = assertEqual "" (Left "timed out") (executeWithin 2 d1ex)
+testTimeout = assertEqual "" (Left $ Bugger "timed out") (executeWithin 2 d1ex)
 
 tests :: [TestTree]
 tests = [
