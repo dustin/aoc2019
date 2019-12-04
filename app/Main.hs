@@ -1,6 +1,6 @@
 module Main where
 
-import qualified Day1
+import qualified Day3
 
 main :: IO ()
-main = print =<< Day1.part1 <$> Day1.getInput
+main = Day3.drawInput "day3.png"

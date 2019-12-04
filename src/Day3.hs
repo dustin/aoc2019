@@ -9,6 +9,7 @@ import           Text.Megaparsec            (endBy, sepBy)
 import           Text.Megaparsec.Char.Lexer (decimal)
 
 import           AoC                        (Parser, mdist2, parseFile)
+import           Vis
 
 
 data Dir = R | D | U | L deriving(Show)
@@ -53,3 +54,10 @@ part2 wires = let maps = wireMap <$> wires
                   olaps = overlaps maps
                   dists = (\k -> sum . fmap (Map.! k) $ maps) <$> olaps
               in minimum dists
+
+drawInput :: FilePath -> IO ()
+drawInput fp = do
+  inp <- fmap wireMap <$> getInput
+  let colored = zipWith (\m c -> fmap (const c) m) inp [green, blue]
+      allps = Map.unionsWith (const . const $ red) colored
+  draw fp allps (\p -> Map.findWithDefault white p allps)
