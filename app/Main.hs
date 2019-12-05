@@ -1,6 +1,10 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Main where
 
-import qualified Day3
+import           Day4
+
+genCount "theCount" (264360, 746325) (2 `elem`)
 
 main :: IO ()
-main = Day3.drawInput "day3.png"
+main = print theCount

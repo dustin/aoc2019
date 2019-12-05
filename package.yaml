@@ -34,6 +34,8 @@ dependencies:
 - megaparsec
 - pqueue
 - lens
+- template-haskell
+- ghc-prim
 
 library:
   source-dirs: src
