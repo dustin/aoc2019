@@ -29,6 +29,8 @@ data FinalState = FinalState {
   foutputs :: [Int]
   } deriving(Show, Eq)
 
+type Op s = Modes -> VMState s -> ST s (Either Termination (VMState s))
+
 -- op4 is a four-int operation.  The first int is the opcode.  We know that by the time we got here.
 -- Next are two addresses, a and b.  We dereference those with 'att'.
 -- The last is the destination address.
@@ -36,7 +38,7 @@ data FinalState = FinalState {
 -- We apply the given binary operation to the two values at the given
 -- addresses and store the result in the desired location, returning
 -- the new pc (which is old pc + 4)
-op4 :: (Int -> Int -> Int) -> Modes -> VMState s -> ST s (Either Termination (VMState s))
+op4 :: (Int -> Int -> Int) -> Op s
 op4 o (m1,m2,m3) vms@VMState{..} = do
   a <- rd m1 (pc + 1) ram
   b <- rd m2 (pc + 2) ram
@@ -53,35 +55,33 @@ wr :: Mode -> MInstructions s -> Int -> Int -> ST s ()
 wr Immediate ram dest val = MV.write ram dest val
 wr Position ram dest val = MV.read ram dest >>= \dest' -> MV.write ram dest' val
 
-type Op s = Modes -> VMState s -> ST s (Either Termination (VMState s))
-
 type InstructionSet s = A.Array Int (Op s)
 
 -- This function completely ignores its parameter modes.
-store :: Modes -> VMState s -> ST s (Either Termination (VMState s))
+store :: Op s
 store _ vms@VMState{..} = do
   dest <- rd Immediate (pc + 1) ram
   wr Immediate ram dest (head inputs)
   pure (Right vms{pc=pc + 2, inputs=tail inputs})
 
-output :: Modes -> VMState s -> ST s (Either Termination (VMState s))
+output :: Op s
 output (m,_,_) vms@VMState{..} = do
   val <- rd m (pc + 1) ram
   pure (Right vms{pc=pc + 2, outputs=val:outputs})
 
-opjt :: Modes -> VMState s -> ST s (Either Termination (VMState s))
+opjt :: Op s
 opjt (m1,m2,_) vms@VMState{..} = do
   val <- rd m1 (pc + 1) ram
   dest <- rd m2 (pc + 2) ram
   pure (Right vms{pc=if val /= 0 then dest else  pc + 3})
 
-opjf :: Modes -> VMState s -> ST s (Either Termination (VMState s))
+opjf :: Op s
 opjf (m1,m2,_) vms@VMState{..} = do
   val <- rd m1 (pc + 1) ram
   dest <- rd m2 (pc + 2) ram
   pure (Right vms{pc=if val == 0 then dest else pc + 3})
 
-cmpfun :: (Int -> Int -> Bool) -> Modes -> VMState s -> ST s (Either Termination (VMState s))
+cmpfun :: (Int -> Int -> Bool) -> Op s
 cmpfun f = op4 (\a b -> if f a b then 1 else 0)
 
 -- This is our instruction set.  It's pretty simple now, but may grow.
