@@ -32,8 +32,7 @@ data FinalState = FinalState {
 type Op s = Modes -> VMState s -> ST s (Either Termination (VMState s))
 
 -- op4 is a four-int operation.  The first int is the opcode.  We know that by the time we got here.
--- Next are two addresses, a and b.  We dereference those with 'att'.
--- The last is the destination address.
+-- Next are two inputs, a and b.  The last is the destination.
 --
 -- We apply the given binary operation to the two values at the given
 -- addresses and store the result in the desired location, returning
@@ -44,8 +43,6 @@ op4 o (m1,m2,m3) vms@VMState{..} = do
   b <- rd m2 (pc + 2) vram
   wr m3 vram (pc + 3) (o a b)
   pure (Right vms{pc=pc + 4})
-
--- pos dereferences a pointer in the machine given the address of a pointer.
 
 rd :: Mode -> Int -> MInstructions s -> ST s Int
 rd Position i ram  = MV.read ram =<< MV.read ram i
