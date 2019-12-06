@@ -57,8 +57,9 @@ type Op s = Modes -> VMState s -> ST s (Either Termination (VMState s))
 
 type InstructionSet s = A.Array Int (Op s)
 
+-- This function completely ignores its parameter modes.
 store :: Modes -> VMState s -> ST s (Either Termination (VMState s))
-store (m,_,_) vms@VMState{..} = do
+store _ vms@VMState{..} = do
   dest <- rd Immediate (pc + 1) ram
   wr Immediate ram dest (head inputs)
   pure (Right vms{pc=pc + 2, inputs=tail inputs})
@@ -80,6 +81,8 @@ opjf (m1,m2,_) vms@VMState{..} = do
   dest <- rd m2 (pc + 2) ram
   pure (Right vms{pc=if val == 0 then dest else pc + 3})
 
+cmpfun :: (Int -> Int -> Bool) -> Modes -> VMState s -> ST s (Either Termination (VMState s))
+cmpfun f = op4 (\a b -> if f a b then 1 else 0)
 
 -- This is our instruction set.  It's pretty simple now, but may grow.
 defaultSet :: InstructionSet s
@@ -92,9 +95,9 @@ defaultSet = A.array (0,100) [(x, op x) | x <- [0..100]]
     op     4 = output
     op     5 = opjt
     op     6 = opjf
-    op     7 = op4 (\a b -> if a < b then 1 else 0)
-    op     8 = op4 (\a b -> if a == b then 1 else 0)
-    op x    = const . const . pure . Left $ Bugger ("invalid instruction: " <> show x)
+    op     7 = cmpfun (<)
+    op     8 = cmpfun (==)
+    op     x = const . const . pure . Left $ Bugger ("invalid instruction: " <> show x)
 
 amode :: Int -> Mode
 amode 0 = Position
