@@ -26,28 +26,24 @@ parseOrbit = do
     object :: Parser Text
     object = pack <$> many alphaNumChar
 
-parseAll :: Parser [Orbit]
-parseAll = parseOrbit `endBy` "\n"
+parseAll :: Parser OMap
+parseAll = omap <$> parseOrbit `endBy` "\n"
+  where omap = Map.fromListWith (const $ error "woops") . fmap swap
 
-getInput :: IO [Orbit]
+getInput :: IO OMap
 getInput = parseFile parseAll "input/day6"
 
-mapIt :: [Orbit] -> OMap
-mapIt = Map.fromListWith (const $ error "woops") . fmap swap
-
-countOrbits :: [Orbit] -> Int
-countOrbits o = sum orbits
-  where omap = mapIt o
-        orbits = lu <$> omap
+countOrbits :: OMap -> Int
+countOrbits omap = sum orbits
+  where orbits = lu <$> omap
         lu v = maybe 1 succ (Map.lookup v orbits)
 
 -- the subtract 2 in there is to remove the endpoints
-countTransfers :: Text -> Text -> [Orbit] -> Maybe Int
-countTransfers f t o = subtract 2 . fst <$> dijkstra (dmap Map.!) f t
+countTransfers :: Text -> Text -> OMap -> Maybe Int
+countTransfers f t omap = subtract 2 . fst <$> dijkstra (dmap Map.!) f t
   where
-    omap = mapIt o
     dmap = fmap (1,) <$> Map.unionWith (<>) (fmap (:[]) omap) rmap
-    rmap = Map.fromListWith (<>) . fmap (fmap (:[])) $ o
+    rmap = Map.fromListWith (<>) . fmap (fmap (:[]) . swap) $ Map.toList omap
 
 part1 :: IO Int
 part1 = countOrbits <$> getInput

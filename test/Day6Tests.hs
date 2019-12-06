@@ -14,10 +14,10 @@ import           Test.Tasty.QuickCheck as QC
 import           AoC
 import           Day6
 
-getExample :: IO [Orbit]
+getExample :: IO OMap
 getExample = parseFile parseAll "input/day6.sample"
 
-getExample2 :: IO [Orbit]
+getExample2 :: IO OMap
 getExample2 = parseFile parseAll "input/day6.sample2"
 
 testPart1 :: Assertion
