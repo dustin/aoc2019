@@ -41,9 +41,7 @@ instance Integral a => Bounded2D (Map (a, a) b) where
   bounds2d = listBounds . Map.keys
 
 draw :: Bounded2D a => FilePath -> a -> PixelFun -> IO ()
-draw fn o pf =  do
-  writePng fn (generateImage fromPF w h)
-
+draw fn o pf = writePng fn (generateImage fromPF w h)
   where
     ((mnx,mny),(mxx,mxy)) = bounds2d o
     w = mxx - mnx

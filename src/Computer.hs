@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Computer (execute, executeWithin, executeIn, Instructions, Termination(..), FinalState(..)) where
@@ -39,9 +38,9 @@ data FinalState = FinalState {
 -- the new pc (which is old pc + 4)
 op4 :: (Int -> Int -> Int) -> Modes -> VMState s -> ST s (Either Termination (VMState s))
 op4 o (m1,m2,m3) vms@VMState{..} = do
-  a <- (rd m1) (pc + 1) ram
-  b <- (rd m2) (pc + 2) ram
-  (wr m3) ram (pc + 3) (o a b)
+  a <- rd m1 (pc + 1) ram
+  b <- rd m2 (pc + 2) ram
+  wr m3 ram (pc + 3) (o a b)
   pure (Right vms{pc=pc + 4})
 
 -- pos dereferences a pointer in the machine given the address of a pointer.
