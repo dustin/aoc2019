@@ -12,7 +12,7 @@ getInput :: IO Instructions
 getInput = V.fromList . fmap read . words . map (\x -> if x == ',' then ' ' else x) <$> readFile "input/day2"
 
 runWith :: Int -> Int -> Instructions -> Int
-runWith a b xs = V.head . fram . fromRight undefined $ execute xs'
+runWith a b xs = V.head . ram . fromRight undefined $ execute xs'
   where xs' = xs & ix 1 .~ a & ix 2 .~ b
 
 part1 :: Instructions -> Int

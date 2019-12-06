@@ -19,14 +19,14 @@ type Modes = (Mode, Mode, Mode)
 
 data VMState s = VMState {
   pc      :: Int,
-  ram     :: MInstructions s,
-  inputs  :: [Int],
-  outputs :: [Int]
+  vram    :: MInstructions s,
+  vinputs :: [Int],
+  vout    :: [Int]
   }
 
 data FinalState = FinalState {
-  fram     :: Instructions,
-  foutputs :: [Int]
+  ram     :: Instructions,
+  outputs :: [Int]
   } deriving(Show, Eq)
 
 type Op s = Modes -> VMState s -> ST s (Either Termination (VMState s))
@@ -40,9 +40,9 @@ type Op s = Modes -> VMState s -> ST s (Either Termination (VMState s))
 -- the new pc (which is old pc + 4)
 op4 :: (Int -> Int -> Int) -> Op s
 op4 o (m1,m2,m3) vms@VMState{..} = do
-  a <- rd m1 (pc + 1) ram
-  b <- rd m2 (pc + 2) ram
-  wr m3 ram (pc + 3) (o a b)
+  a <- rd m1 (pc + 1) vram
+  b <- rd m2 (pc + 2) vram
+  wr m3 vram (pc + 3) (o a b)
   pure (Right vms{pc=pc + 4})
 
 -- pos dereferences a pointer in the machine given the address of a pointer.
@@ -60,25 +60,25 @@ type InstructionSet s = A.Array Int (Op s)
 -- This function completely ignores its parameter modes.
 store :: Op s
 store _ vms@VMState{..} = do
-  dest <- rd Immediate (pc + 1) ram
-  wr Immediate ram dest (head inputs)
-  pure (Right vms{pc=pc + 2, inputs=tail inputs})
+  dest <- rd Immediate (pc + 1) vram
+  wr Immediate vram dest (head vinputs)
+  pure (Right vms{pc=pc + 2, vinputs=tail vinputs})
 
 output :: Op s
 output (m,_,_) vms@VMState{..} = do
-  val <- rd m (pc + 1) ram
-  pure (Right vms{pc=pc + 2, outputs=val:outputs})
+  val <- rd m (pc + 1) vram
+  pure (Right vms{pc=pc + 2, vout=val:vout})
 
 opjt :: Op s
 opjt (m1,m2,_) vms@VMState{..} = do
-  val <- rd m1 (pc + 1) ram
-  dest <- rd m2 (pc + 2) ram
+  val <- rd m1 (pc + 1) vram
+  dest <- rd m2 (pc + 2) vram
   pure (Right vms{pc=if val /= 0 then dest else  pc + 3})
 
 opjf :: Op s
 opjf (m1,m2,_) vms@VMState{..} = do
-  val <- rd m1 (pc + 1) ram
-  dest <- rd m2 (pc + 2) ram
+  val <- rd m1 (pc + 1) vram
+  dest <- rd m2 (pc + 2) vram
   pure (Right vms{pc=if val == 0 then dest else pc + 3})
 
 cmpfun :: (Int -> Int -> Bool) -> Op s
@@ -111,7 +111,7 @@ modes x = (nmode 100, nmode 1000, nmode 10000)
 executeWithinST :: Int -> VMState s -> InstructionSet s -> ST s (Either Termination FinalState)
 executeWithinST 0 _ _ = pure . Left $ Bugger "timed out"
 executeWithinST n vms@VMState{..} iSet = do
-  i <- MV.read ram pc
+  i <- MV.read vram pc
   let basei = i `mod` 100
       imodes = modes i
   e <- (iSet A.! basei) imodes vms
@@ -119,14 +119,14 @@ executeWithinST n vms@VMState{..} iSet = do
     Left x     -> terminate x
     Right vms' -> executeWithinST (n - 1) vms' iSet
 
-    where terminate NormalTermination = V.unsafeFreeze ram >>= \r -> pure $ Right (FinalState r (reverse outputs))
+    where terminate NormalTermination = V.unsafeFreeze vram >>= \r -> pure $ Right (FinalState r (reverse vout))
           terminate x                 = pure $ Left x
 
 -- Mutable vector in ST monad.
 executeWithin :: Int -> Instructions -> Either Termination FinalState
 executeWithin limit ins = runST $ do
   mv <- V.thaw ins
-  let vms = VMState{pc=0, ram=mv, inputs=[], outputs=[]}
+  let vms = VMState{pc=0, vram=mv, vinputs=[], vout=[]}
   either (pure . Left) (pure . Right) =<< executeWithinST limit vms defaultSet
 
 execute :: Instructions -> Either Termination FinalState
@@ -136,7 +136,7 @@ execute = executeWithin 100000
 executeWithinIns :: Int -> [Int] -> Instructions -> Either Termination FinalState
 executeWithinIns limit invals ins = runST $ do
   mv <- V.thaw ins
-  let vms = VMState{pc=0, ram=mv, inputs=invals, outputs=[]}
+  let vms = VMState{pc=0, vram=mv, vinputs=invals, vout=[]}
   either (pure . Left) (pure . Right) =<< executeWithinST limit vms defaultSet
 
 executeIn :: [Int] -> Instructions -> Either Termination FinalState

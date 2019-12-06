@@ -14,7 +14,7 @@ import           Day5
 compute :: [Int] -> IO (Either Termination [Int])
 compute myinput = do
   ins <- getInput
-  pure $ foutputs <$> executeIn myinput ins
+  pure $ outputs <$> executeIn myinput ins
 
 testPart1 :: Assertion
 testPart1 = assertEqual "" (Right 4511442) =<< (fmap last <$> compute [1])

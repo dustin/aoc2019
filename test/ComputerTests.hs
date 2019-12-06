@@ -16,7 +16,7 @@ d1ex :: Instructions
 d1ex = [1,9,10,3,2,3,11,0,99,30,40,50]
 
 testD2Ex :: Assertion
-testD2Ex = assertEqual "" 3500 (V.head $ fram . fromRight undefined $ execute d1ex)
+testD2Ex = assertEqual "" 3500 (V.head $ ram . fromRight undefined $ execute d1ex)
 
 testTimeout :: Assertion
 testTimeout = assertEqual "" (Left $ Bugger "timed out") (executeWithin 2 d1ex)
@@ -28,10 +28,10 @@ d5ex2 :: Instructions
 d5ex2 = [1002,4,3,4,33]
 
 testD5ex1 :: Assertion
-testD5ex1 = assertEqual "" [5150] (foutputs . fromRight undefined $ executeIn [5150] d5ex)
+testD5ex1 = assertEqual "" [5150] (outputs . fromRight undefined $ executeIn [5150] d5ex)
 
 testD5ex2 :: Assertion
-testD5ex2 = assertEqual "" [1002,4,3,4,99] (fram . fromRight undefined $ execute d5ex2)
+testD5ex2 = assertEqual "" [1002,4,3,4,99] (ram . fromRight undefined $ execute d5ex2)
 
 testD5Compares :: Assertion
 testD5Compares = mm [
@@ -44,7 +44,7 @@ testD5Compares = mm [
     mm :: [(Instructions, Int, Int)] -> Assertion
     mm = mapM_ aProg
     run :: Instructions -> Int -> Int
-    run prog num = (head . foutputs . fromRight undefined $ executeIn [num] prog)
+    run prog num = (head . outputs . fromRight undefined $ executeIn [num] prog)
     aProg :: (Instructions, Int, Int) -> Assertion
     aProg (prog, num, want) = assertEqual (show prog <> "@" <> show num) want (run prog num)
     ex1 :: Instructions
@@ -66,7 +66,7 @@ testD5Jumps = mm [
     mm :: [(Instructions, Int, Int)] -> Assertion
     mm = mapM_ aProg
     run :: Instructions -> Int -> Int
-    run prog num = (head . foutputs . fromRight undefined $ executeIn [num] prog)
+    run prog num = (head . outputs . fromRight undefined $ executeIn [num] prog)
     aProg :: (Instructions, Int, Int) -> Assertion
     aProg (prog, num, want) = assertEqual (show prog <> "@" <> show num) want (run prog num)
     ex1 :: Instructions
@@ -81,13 +81,13 @@ d5ex3 = [3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,
          999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99]
 
 testD5OMG :: Assertion
-testD5OMG = assertEqual "" [999] (foutputs . fromRight undefined $ executeIn [7] d5ex3)
+testD5OMG = assertEqual "" [999] (outputs . fromRight undefined $ executeIn [7] d5ex3)
 
 testD5OMG2 :: Assertion
-testD5OMG2 = assertEqual "" [1000] (foutputs . fromRight undefined $ executeIn [8] d5ex3)
+testD5OMG2 = assertEqual "" [1000] (outputs . fromRight undefined $ executeIn [8] d5ex3)
 
 testD5OMG3 :: Assertion
-testD5OMG3 = assertEqual "" [1001] (foutputs . fromRight undefined $ executeIn [11] d5ex3)
+testD5OMG3 = assertEqual "" [1001] (outputs . fromRight undefined $ executeIn [11] d5ex3)
 
 
 tests :: [TestTree]
