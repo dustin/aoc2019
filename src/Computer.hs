@@ -52,8 +52,6 @@ wr :: Mode -> MInstructions s -> Int -> Int -> ST s ()
 wr Immediate ram dest val = MV.write ram dest val
 wr Position ram dest val = MV.read ram dest >>= \dest' -> MV.write ram dest' val
 
-type InstructionSet s = A.Array Int (Op s)
-
 -- This function completely ignores its parameter modes.
 store :: Op s
 store _ vms@VMState{..} = do
@@ -80,6 +78,8 @@ opjf (m1,m2,_) vms@VMState{..} = do
 
 cmpfun :: (Int -> Int -> Bool) -> Op s
 cmpfun f = op4 (\a b -> if f a b then 1 else 0)
+
+type InstructionSet s = A.Array Int (Op s)
 
 -- This is our instruction set.  It's pretty simple now, but may grow.
 defaultSet :: InstructionSet s
