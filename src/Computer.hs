@@ -1,6 +1,9 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Computer (execute, executeWithin, executeIn, Instructions, Termination(..), FinalState(..)) where
+module Computer (execute, executeWithin, executeIn, readInstructions,
+                 Instructions, Termination(..), defaultSet, executeWithinST,
+                 InstructionSet, VMState(..), Op, Mode(..), rd, wr,
+                 FinalState(..), Paused(..), resume) where
 
 import           Control.Monad.ST
 import qualified Data.Array                  as A
@@ -9,24 +12,38 @@ import qualified Data.Vector.Unboxed.Mutable as MV
 
 type Instructions = V.Vector Int
 
+readInstructions :: FilePath -> IO Instructions
+readInstructions fn = V.fromList . fmap read . words . map (\x -> if x == ',' then ' ' else x) <$> readFile fn
+
 type MInstructions s = V.MVector s Int
 
-data Termination = NormalTermination | Bugger String deriving (Show, Eq)
+data Paused = Paused {
+  pausedPC   :: Int,
+  pausedIns  :: Instructions,
+  pausedOuts :: [Int]
+  } deriving(Eq, Show)
+
+data Termination = NormalTermination
+                 | NoInput Paused
+                 | Bugger String deriving (Show, Eq)
 
 data Mode = Position | Immediate deriving (Show, Eq)
 
 type Modes = (Mode, Mode, Mode)
 
 data VMState s = VMState {
-  pc      :: Int,
-  vram    :: MInstructions s,
+  pc      :: !Int,
+  vram    :: !(MInstructions s),
   vinputs :: [Int],
   vout    :: [Int]
   }
 
+fromPaused :: [Int] -> Paused -> ST s (VMState s)
+fromPaused i Paused{..} = V.thaw pausedIns >>= \ir -> pure $ VMState pausedPC ir i pausedOuts
+
 data FinalState = FinalState {
-  ram     :: Instructions,
-  outputs :: [Int]
+  ram     :: !Instructions,
+  outputs :: ![Int]
   } deriving(Show, Eq)
 
 type Op s = Modes -> VMState s -> ST s (Either Termination (VMState s))
@@ -53,8 +70,10 @@ wr Immediate ram dest val = MV.write ram dest val
 wr Position ram dest val = MV.read ram dest >>= \dest' -> MV.write ram dest' val
 
 -- This function completely ignores its parameter modes.
-store :: Op s
-store _ vms@VMState{..} = do
+input :: Op s
+input _ vms@VMState{..}
+  | (null vinputs) = V.unsafeFreeze vram >>= \r -> pure $ Left (NoInput (Paused pc r vout))
+  | otherwise = do
   dest <- rd Immediate (pc + 1) vram
   wr Immediate vram dest (head vinputs)
   pure (Right vms{pc=pc + 2, vinputs=tail vinputs})
@@ -62,7 +81,7 @@ store _ vms@VMState{..} = do
 output :: Op s
 output (m,_,_) vms@VMState{..} = do
   val <- rd m (pc + 1) vram
-  pure (Right vms{pc=pc + 2, vout=val:vout})
+  pure (Right vms{pc=pc + 2, vout=vout<>[val]})
 
 opjt :: Op s
 opjt (m1,m2,_) vms@VMState{..} = do
@@ -88,7 +107,7 @@ defaultSet = A.array (0,100) [(x, op x) | x <- [0..100]]
     op    99 = const . const . pure $ Left NormalTermination
     op     1 = op4 (+)
     op     2 = op4 (*)
-    op     3 = store
+    op     3 = input
     op     4 = output
     op     5 = opjt
     op     6 = opjf
@@ -111,12 +130,13 @@ executeWithinST n vms@VMState{..} iSet = do
   i <- MV.read vram pc
   let basei = i `mod` 100
       imodes = modes i
+  -- trace ("Doing " <> show basei) $ pure ()
   e <- (iSet A.! basei) imodes vms
   case e of
     Left x     -> terminate x
     Right vms' -> executeWithinST (n - 1) vms' iSet
 
-    where terminate NormalTermination = V.unsafeFreeze vram >>= \r -> pure $ Right (FinalState r (reverse vout))
+    where terminate NormalTermination = V.unsafeFreeze vram >>= \r -> pure $ Right (FinalState r vout)
           terminate x                 = pure $ Left x
 
 -- Mutable vector in ST monad.
@@ -139,6 +159,11 @@ executeWithinIns limit invals ins = runST $ do
 executeIn :: [Int] -> Instructions -> Either Termination FinalState
 executeIn = executeWithinIns 100000
 
+-- Resume a paused VM.
+resume :: Paused -> [Int] -> Either Termination FinalState
+resume p ins = runST $ do
+  vms <- fromPaused ins p
+  either (pure . Left) (pure . Right) =<< executeWithinST 100000 vms defaultSet
 
 {- Immutable Vector version
 execute' :: Int -> Instructions -> Instructions
