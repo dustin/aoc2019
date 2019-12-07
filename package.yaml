@@ -36,6 +36,7 @@ dependencies:
 - lens
 - template-haskell
 - ghc-prim
+- doctest
 
 library:
   source-dirs: src
@@ -75,3 +76,17 @@ tests:
     - tasty-quickcheck
     - QuickCheck
     - tasty-golden
+
+benchmarks:
+  aoc-bench:
+    dependencies:
+    - aoc
+    - criterion
+    - deepseq
+    ghc-options:
+    - -O2
+    - -rtsopts
+    - -threaded
+    - -with-rtsopts=-N
+    main: bench.hs
+    source-dirs: test/bench
