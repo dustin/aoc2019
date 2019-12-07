@@ -72,11 +72,11 @@ wr Position ram dest val = MV.read ram dest >>= \dest' -> MV.write ram dest' val
 -- This function completely ignores its parameter modes.
 input :: Op s
 input _ vms@VMState{..}
-  | (null vinputs) = V.unsafeFreeze vram >>= \r -> pure $ Left (NoInput (Paused pc r vout))
+  | null vinputs = V.unsafeFreeze vram >>= \r -> pure $ Left (NoInput (Paused pc r vout))
   | otherwise = do
-  dest <- rd Immediate (pc + 1) vram
-  wr Immediate vram dest (head vinputs)
-  pure (Right vms{pc=pc + 2, vinputs=tail vinputs})
+      dest <- rd Immediate (pc + 1) vram
+      wr Immediate vram dest (head vinputs)
+      pure (Right vms{pc=pc + 2, vinputs=tail vinputs})
 
 output :: Op s
 output (m,_,_) vms@VMState{..} = do

@@ -67,6 +67,7 @@ tests:
     ghc-options:
     - -threaded
     - -rtsopts
+    - -eventlog
     - -with-rtsopts=-N
     dependencies:
     - aoc
@@ -87,6 +88,6 @@ benchmarks:
     - -O2
     - -rtsopts
     - -threaded
-    - -with-rtsopts=-N
+    - -with-rtsopts=-ls -N
     main: bench.hs
     source-dirs: test/bench
