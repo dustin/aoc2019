@@ -17,7 +17,7 @@ testPart2 :: Assertion
 testPart2 = assertEqual "" 6979 =<< part2 <$> getInput
 
 testPart2' :: Assertion
-testPart2' = assertEqual "" 6979 =<< part2 <$> getInput
+testPart2' = assertEqual "" 6979 =<< part2' <$> getInput
 
 tests :: [TestTree]
 tests = [

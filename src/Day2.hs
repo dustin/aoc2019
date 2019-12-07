@@ -2,14 +2,14 @@ module Day2 where
 
 import           Control.Lens
 import           Control.Monad               (guard)
-import           Control.Parallel.Strategies (parBuffer, rdeepseq, using)
+import           Control.Parallel.Strategies (parMap, rdeepseq)
 import           Data.Either                 (fromRight)
 import qualified Data.Vector.Unboxed         as V
 
 import           Computer
 
 getInput :: IO Instructions
-getInput = V.fromList . fmap read . words . map (\x -> if x == ',' then ' ' else x) <$> readFile "input/day2"
+getInput = readInstructions "input/day2"
 
 runWith :: Int -> Int -> Instructions -> Int
 runWith a b xs = V.head . ram . fromRight undefined $ execute xs'
@@ -29,8 +29,9 @@ part2 xs = head $ do
 
 -- Parallel version of part 2
 part2' :: Instructions -> Int
-part2' xs = ans (filter f range `using` parBuffer 100 rdeepseq)
+part2' xs = head . filter (/= 0) . parMap rdeepseq f $ range
   where
     range = [(a,b) | a <- [1..100], b <- [1..100]]
-    ans ((a,b):_) = 100 * a + b
-    f (a,b) = runWith a b xs == 19690720
+    f (a,b) = case runWith a b xs of
+                19690720 -> 100 * a + b
+                _        -> 0
