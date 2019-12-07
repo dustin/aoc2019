@@ -2,8 +2,9 @@
 
 module Day7 where
 
-import           Control.Monad (foldM)
-import           Data.List     (permutations)
+import           Control.Monad               (foldM)
+import           Control.Parallel.Strategies
+import           Data.List                   (permutations)
 
 import           Computer
 
@@ -13,16 +14,18 @@ getInput = readInstructions "input/day7"
 findMaxThrust :: Instructions -> Either Termination Int
 findMaxThrust prog = fmap maximum <$> traverse runList $ permutations [0..4]
   where
-    runList = foldM (\x n -> runOnce n x) 0
+    runList = foldM (flip runOnce) 0
     runOnce a b = head . outputs <$> executeIn [a,b] prog
 
-findFeedback :: Instructions -> [Int]
-findFeedback prog = fmap maximum <$> traverse run $ permutations [5..9]
+-- This was: `fmap maximum <$> traverse run $ permutations [5..9]` but
+-- I haven't been able to get that to parallelize well.
+findFeedback :: Instructions -> Int
+findFeedback prog = maximum . fmap maximum . sequenceA . parMap rseq run $ permutations [5..9]
   where
     run = next . start . seed
     seed (x:xs) = [[x,0]] <> map (:[]) xs
     seed []     = error "empty seed"
-    start = zip ['A'..] . map (flip executeIn prog)
+    start = zip ['A'..] . map (`executeIn` prog)
     next (('E', Right x):_) = outputs x
     next (x:xs)             = forward x xs
     next []                 = error "empty next"
@@ -35,5 +38,5 @@ findFeedback prog = fmap maximum <$> traverse run $ permutations [5..9]
 part1 :: IO (Either Termination Int)
 part1 = findMaxThrust <$> getInput
 
-part2 :: IO [Int]
+part2 :: IO Int
 part2 = findFeedback <$> getInput
