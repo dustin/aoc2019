@@ -2,9 +2,7 @@
 
 module Main where
 
-import           Day4
-
-genCount "theCount" (264360, 746325) (2 `elem`)
+import           Day8
 
 main :: IO ()
-main = print theCount
+main = part2
