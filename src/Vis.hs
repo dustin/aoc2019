@@ -10,7 +10,7 @@ white :: PixelRGB8
 white = PixelRGB8 255 255 255
 
 black :: PixelRGB8
-black = PixelRGB8 255 255 255
+black = PixelRGB8 0 0 0
 
 red :: PixelRGB8
 red = PixelRGB8 255 0 0
