@@ -2,7 +2,7 @@
 
 module Day8 where
 
-import           Data.List.Extra (chunksOf)
+import           Data.List.Extra (chunksOf, minimumOn)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 
@@ -18,8 +18,7 @@ myHeight = 6
 part1 :: IO Int
 part1 = do
   layers <- chunksOf (myWidth*myHeight) <$> getInput
-  let lm = Map.fromList $ map (\x -> (count '0' x, x)) layers
-      (_, v) = Map.findMin lm
+  let v = minimumOn (count '0') layers
   pure (count '1' v * count '2' v)
     where
       count x = length . filter (== x)
