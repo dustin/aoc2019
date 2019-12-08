@@ -41,30 +41,34 @@ listBounds l = ((fromIntegral $ minimum xs, fromIntegral $ minimum ys),
 instance Integral a => Bounded2D (Map (a, a) b) where
   bounds2d = listBounds . Map.keys
 
-draw :: Bounded2D a => FilePath -> a -> PixelFun -> IO ()
-draw fn o pf = writePng fn (generateImage fromPF w h)
+data DrawSpec = DrawSpec {
+  width  :: Int,
+  height :: Int,
+  transX :: Int -> Int,
+  transY :: Int -> Int
+  }
+
+mkDrawSpec :: Bounded2D a => a -> DrawSpec
+mkDrawSpec a = DrawSpec{..}
   where
-    ((mnx,mny),(mxx,mxy)) = bounds2d o
-    w = mxx - mnx + 1
-    h = mxy - mny + 1
+    ((mnx,mny),(mxx,mxy)) = bounds2d a
+    width = mxx - mnx + 1
+    height = mxy - mny + 1
 
     -- img x -> object x
-    gx x = mnx + x
-    gy y = mny + y
+    transX = (mnx +)
+    transY = (mny +)
 
-    fromPF x y = pf (gx x, gy y)
+draw :: Bounded2D a => FilePath -> a -> PixelFun -> IO ()
+draw fn o pf = writePng fn (generateImage fromPF width height)
+  where
+    DrawSpec{..} = mkDrawSpec o
+    fromPF x y = pf (transX x, transY y)
 
 type CharFun = (Int, Int) -> Char
 
 drawString :: Bounded2D a => a -> CharFun -> String
-drawString a cf = intercalate "\n" (map (\y -> map (\x -> fromPF x y) [0.. w - 1]) [0.. h - 1])
+drawString a cf = intercalate "\n" (map (\y -> map (\x -> fromPF x y) [0.. width - 1]) [0.. height - 1])
   where
-    ((mnx,mny),(mxx,mxy)) = bounds2d a
-    w = mxx - mnx + 1
-    h = mxy - mny + 1
-
-    -- img x -> object x
-    gx x = mnx + x
-    gy y = mny + y
-
-    fromPF x y = cf (gx x, gy y)
+    DrawSpec{..} = mkDrawSpec a
+    fromPF x y = cf (transX x, transY y)
