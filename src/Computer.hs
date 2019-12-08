@@ -130,7 +130,6 @@ executeWithinST n vms@VMState{..} iSet = do
   i <- MV.read vram pc
   let basei = i `mod` 100
       imodes = modes i
-  -- trace ("Doing " <> show basei) $ pure ()
   e <- (iSet A.! basei) imodes vms
   case e of
     Left x     -> terminate x
