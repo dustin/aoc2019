@@ -23,10 +23,12 @@ import qualified Data.Set        as Set
 -- | Get the position of the start of the first cycle and the cycle length from a list.
 findCycle :: Ord b => (a -> b) -> [a] -> (Int,Int,a)
 findCycle f = go 0 mempty
-  where go n mem (x:xs) = case Map.lookup t mem of
-                            Nothing -> go (n+1) (Map.insert t n mem) xs
-                            Just o  -> (o,n - o,x)
-          where t = f x
+  where
+    go _ _ [] = error "findCycle: no inputs"
+    go n mem (x:xs) = case Map.lookup t mem of
+                        Nothing -> go (n+1) (Map.insert t n mem) xs
+                        Just o  -> (o,n - o,x)
+      where t = f x
 
 -- Tests for this are in Day22.
 
@@ -116,6 +118,7 @@ binSearchM f l h
 
 -- | Find a local minimum.
 findMin :: Ord b => (a -> b) -> [a] -> a
+findMin _ [] = error "findMin: no inputs"
 findMin f (x:xs) = go xs x
   where go [] r = r
         go (x':xs') r
@@ -124,6 +127,7 @@ findMin f (x:xs) = go xs x
 
 -- | Find a local maximum.
 findMax :: Ord b => (a -> b) -> [a] -> a
+findMax _ [] = error "findMax: no inputs"
 findMax f (x:xs) = go xs x
   where go [] r = r
         go (x':xs') r
