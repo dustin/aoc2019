@@ -3,6 +3,7 @@
 module Vis where
 
 import           Codec.Picture   (PixelRGB8 (..), generateImage, writePng)
+import           Data.List       (intercalate)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 
@@ -44,11 +45,26 @@ draw :: Bounded2D a => FilePath -> a -> PixelFun -> IO ()
 draw fn o pf = writePng fn (generateImage fromPF w h)
   where
     ((mnx,mny),(mxx,mxy)) = bounds2d o
-    w = mxx - mnx
-    h = mxy - mny
+    w = mxx - mnx + 1
+    h = mxy - mny + 1
 
     -- img x -> object x
     gx x = mnx + x
     gy y = mny + y
 
     fromPF x y = pf (gx x, gy y)
+
+type CharFun = (Int, Int) -> Char
+
+drawString :: Bounded2D a => a -> CharFun -> String
+drawString a cf = intercalate "\n" (map (\y -> map (\x -> fromPF x y) [0.. w - 1]) [0.. h - 1])
+  where
+    ((mnx,mny),(mxx,mxy)) = bounds2d a
+    w = mxx - mnx + 1
+    h = mxy - mny + 1
+
+    -- img x -> object x
+    gx x = mnx + x
+    gy y = mny + y
+
+    fromPF x y = cf (gx x, gy y)
