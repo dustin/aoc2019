@@ -7,6 +7,7 @@ import           Data.Either                 (fromRight)
 import qualified Data.Vector.Unboxed         as V
 
 import           Computer
+import           Search
 
 getInput :: IO Instructions
 getInput = readInstructions "input/day2"
@@ -35,3 +36,6 @@ part2' xs = head . filter (/= 0) . parMap rdeepseq f $ range
     f (a,b) = case runWith a b xs of
                 19690720 -> 100 * a + b
                 _        -> 0
+
+part2'' :: Instructions -> Int
+part2'' prog = autoBinSearch (\x -> let (n,v) = x `divMod` 100 in compare (runWith n v prog) 19690720)
