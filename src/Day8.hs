@@ -41,12 +41,6 @@ part2 = do
   let flat = flatten myWidth myHeight layers
       m = layerMap myWidth myHeight flat
 
-  putStrLn (drawString m (\pos -> case m Map.! pos of
-                                    '0' -> ' '
-                                    '1' -> '▮'
-                                    _   -> '?'))
+  putStrLn (drawString m (mapCharFunTrans m [('0', ' '), ('1', '▮')]))
 
-  draw "day8.png" m (\pos -> case m Map.! pos of
-                               '0' -> white
-                               '1' -> black
-                               _   -> green)
+  draw "day8.png" m (mapPixelFunTrans m [('0', white), ('1', black)])

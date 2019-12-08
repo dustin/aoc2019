@@ -31,6 +31,13 @@ class Bounded2D a where
 
 type PixelFun = (Int,Int) -> PixelRGB8
 
+mapPixelFun :: Map (Int,Int) a -> (a -> PixelRGB8) -> PixelFun
+mapPixelFun m f = f . (m Map.!)
+
+mapPixelFunTrans :: Ord a => Map (Int, Int) a -> [(a, PixelRGB8)] -> PixelFun
+mapPixelFunTrans m l = mapPixelFun m (\x -> Map.findWithDefault green x cm)
+  where cm = Map.fromList l
+
 listBounds :: Integral a => [(a,a)] -> ((Int,Int),(Int,Int))
 listBounds l = ((fromIntegral $ minimum xs, fromIntegral $ minimum ys),
                 (fromIntegral $ maximum xs, fromIntegral $ maximum ys))
@@ -66,6 +73,13 @@ draw fn o pf = writePng fn (generateImage fromPF width height)
     fromPF x y = pf (transX x, transY y)
 
 type CharFun = (Int, Int) -> Char
+
+mapCharFun :: Map (Int,Int) a -> (a -> Char) -> CharFun
+mapCharFun m f = f . (m Map.!)
+
+mapCharFunTrans :: Ord a => Map (Int, Int) a -> [(a, Char)] -> CharFun
+mapCharFunTrans m l = mapCharFun m (\x -> Map.findWithDefault '?' x cm)
+  where cm = Map.fromList l
 
 drawString :: Bounded2D a => a -> CharFun -> String
 drawString a cf = intercalate "\n" (map (\y -> map (\x -> fromPF x y) [0.. width - 1]) [0.. height - 1])
