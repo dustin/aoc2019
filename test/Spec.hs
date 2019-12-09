@@ -11,6 +11,7 @@ import qualified Day5Tests
 import qualified Day6Tests
 import qualified Day7Tests
 import qualified Day8Tests
+import qualified Day9Tests
 import qualified SearchTests
 
 tests :: [TestTree]
@@ -24,7 +25,8 @@ tests = [
   testGroup "day 5" Day5Tests.tests,
   testGroup "day 6" Day6Tests.tests,
   testGroup "day 7" Day7Tests.tests,
-  testGroup "day 8" Day8Tests.tests
+  testGroup "day 8" Day8Tests.tests,
+  testGroup "day 9" Day9Tests.tests
   ]
 
 main :: IO ()
