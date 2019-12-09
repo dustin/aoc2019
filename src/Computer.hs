@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeFamilies    #-}
 
 module Computer (execute, executeWithin, executeIn, readInstructions,
                  Instructions(..), Termination(..), defaultSet, peek, poke,
@@ -9,13 +10,16 @@ module Computer (execute, executeWithin, executeIn, readInstructions,
 import qualified Data.Array      as A
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
+import           GHC.Exts        (IsList (..))
 
 import           OKComputer
 
 newtype Instructions = Instructions (Map Integer Integer) deriving (Show, Eq)
 
-fromList :: [Integer] -> Instructions
-fromList ins = Instructions (M.fromList $ zip [0..] ins)
+instance IsList Instructions where
+  type Item Instructions = Integer
+  fromList ins = Instructions (M.fromList $ zip [0..] ins)
+  toList (Instructions ins) = M.elems ins
 
 readInstructions :: FilePath -> IO Instructions
 readInstructions fn = fromList . fmap read . words . map (\x -> if x == ',' then ' ' else x) <$> readFile fn
