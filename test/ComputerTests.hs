@@ -13,19 +13,19 @@ import           Test.Tasty.QuickCheck as QC
 import           Computer
 
 d1ex :: Instructions
-d1ex = [1,9,10,3,2,3,11,0,99,30,40,50]
+d1ex = fromList [1,9,10,3,2,3,11,0,99,30,40,50]
 
 testD2Ex :: Assertion
-testD2Ex = assertEqual "" 3500 (V.head $ ram . fromRight undefined $ execute d1ex)
+testD2Ex = assertEqual "" 3500 (peek 0 $ ram . fromRight undefined $ execute d1ex)
 
 testTimeout :: Assertion
 testTimeout = assertEqual "" (Left $ Bugger "timed out") (executeWithin 2 d1ex)
 
 d5ex :: Instructions
-d5ex = [3,0,4,0,99]
+d5ex = fromList [3,0,4,0,99]
 
 d5ex2 :: Instructions
-d5ex2 = [1002,4,3,4,33]
+d5ex2 = fromList [1002,4,3,4,33]
 
 testD5ex1 :: Assertion
 testD5ex1 = assertEqual "" [5150] (outputs . fromRight undefined $ executeIn [5150] d5ex)
@@ -36,7 +36,7 @@ testD5ex1L = assertEqual "" [5150] $ lrun d5ex [5150]
     lrun prog ins = outputs . fromRight undefined . executeIn ins $ prog
 
 testD5ex2 :: Assertion
-testD5ex2 = assertEqual "" [1002,4,3,4,99] (ram . fromRight undefined $ execute d5ex2)
+testD5ex2 = assertEqual "" (fromList [1002,4,3,4,99]) (ram . fromRight undefined $ execute d5ex2)
 
 testD5Compares :: Assertion
 testD5Compares = mm [
@@ -46,20 +46,20 @@ testD5Compares = mm [
   (ex4, 5, 1), (ex4, 9, 0)
   ]
   where
-    mm :: [(Instructions, Int, Int)] -> Assertion
+    mm :: [(Instructions, Integer, Integer)] -> Assertion
     mm = mapM_ aProg
-    run :: Instructions -> Int -> Int
+    run :: Instructions -> Integer -> Integer
     run prog num = (head . outputs . fromRight undefined $ executeIn [num] prog)
-    aProg :: (Instructions, Int, Int) -> Assertion
+    aProg :: (Instructions, Integer, Integer) -> Assertion
     aProg (prog, num, want) = assertEqual (show prog <> "@" <> show num) want (run prog num)
     ex1 :: Instructions
-    ex1 = [3,9,8,9,10,9,4,9,99,-1,8]
+    ex1 = fromList [3,9,8,9,10,9,4,9,99,-1,8]
     ex2 :: Instructions
-    ex2 = [3,9,7,9,10,9,4,9,99,-1,8]
+    ex2 = fromList [3,9,7,9,10,9,4,9,99,-1,8]
     ex3 :: Instructions
-    ex3 = [3,3,1108,-1,8,3,4,3,99]
+    ex3 = fromList [3,3,1108,-1,8,3,4,3,99]
     ex4 :: Instructions
-    ex4 = [3,3,1107,-1,8,3,4,3,99]
+    ex4 = fromList [3,3,1107,-1,8,3,4,3,99]
 
 
 testD5Jumps :: Assertion
@@ -68,22 +68,22 @@ testD5Jumps = mm [
   (ex2, 0, 0), (ex2, 9, 1)
   ]
   where
-    mm :: [(Instructions, Int, Int)] -> Assertion
+    mm :: [(Instructions, Integer, Integer)] -> Assertion
     mm = mapM_ aProg
-    run :: Instructions -> Int -> Int
+    run :: Instructions -> Integer -> Integer
     run prog num = (head . outputs . fromRight undefined $ executeIn [num] prog)
-    aProg :: (Instructions, Int, Int) -> Assertion
+    aProg :: (Instructions, Integer, Integer) -> Assertion
     aProg (prog, num, want) = assertEqual (show prog <> "@" <> show num) want (run prog num)
     ex1 :: Instructions
-    ex1 = [3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9]
+    ex1 = fromList [3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9]
     ex2 :: Instructions
-    ex2 = [3,3,1105,-1,9,1101,0,0,12,4,12,99,1]
+    ex2 = fromList [3,3,1105,-1,9,1101,0,0,12,4,12,99,1]
 
 
 d5ex3 :: Instructions
-d5ex3 = [3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,
-         1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,
-         999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99]
+d5ex3 = fromList [3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,
+                  1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,
+                  999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99]
 
 testD5OMG :: Assertion
 testD5OMG = assertEqual "" [999] (outputs . fromRight undefined $ executeIn [7] d5ex3)
