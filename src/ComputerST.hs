@@ -10,6 +10,8 @@ import qualified Data.Array                  as A
 import qualified Data.Vector.Unboxed         as V
 import qualified Data.Vector.Unboxed.Mutable as MV
 
+import           OKComputer
+
 type Instructions = V.Vector Int
 
 readInstructions :: FilePath -> IO Instructions
@@ -26,8 +28,6 @@ data Paused = Paused {
 data Termination = NormalTermination
                  | NoInput Paused
                  | Bugger String deriving (Show, Eq)
-
-data Mode = Position | Immediate | Relative deriving (Show, Eq)
 
 type Modes = (Mode, Mode, Mode)
 
@@ -116,12 +116,6 @@ defaultSet = A.array (0,100) [(x, op x) | x <- [0..100]]
     op     7 = cmpfun (<)
     op     8 = cmpfun (==)
     op     x = const . const . pure . Left $ Bugger ("invalid instruction: " <> show x)
-
-amode :: Int -> Mode
-amode 0 = Position
-amode 1 = Immediate
-amode 2 = Relative
-amode x = error ("invalid mode: " <> show x)
 
 modes :: Int -> (Mode, Mode, Mode)
 modes x = (nmode 100, nmode 1000, nmode 10000)

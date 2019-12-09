@@ -10,6 +10,8 @@ import qualified Data.Array      as A
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 
+import           OKComputer
+
 newtype Instructions = Instructions (Map Integer Integer) deriving (Show, Eq)
 
 fromList :: [Integer] -> Instructions
@@ -28,8 +30,6 @@ data Paused = Paused {
 data Termination = NormalTermination
                  | NoInput Paused
                  | Bugger String deriving (Show, Eq)
-
-data Mode = Position | Immediate | Relative deriving (Show, Eq)
 
 type Modes = (Mode, Mode, Mode)
 
@@ -130,15 +130,9 @@ defaultSet = A.array (0,100) [(x, op x) | x <- [0..100]]
     op     9 = setrel
     op     x = const . const . Left $ Bugger ("invalid instruction: " <> show x)
 
-amode :: Integer -> Mode
-amode 0 = Position
-amode 1 = Immediate
-amode 2 = Relative
-amode x = error ("invalid mode: " <> show x)
-
 modes :: Integer -> (Mode, Mode, Mode)
 modes x = (nmode 100, nmode 1000, nmode 10000)
-  where nmode pl = amode $ x `mod` (pl*10) `div` pl
+  where nmode pl = amode $ (fromIntegral x) `mod` (pl*10) `div` pl
 
 executeWithin' :: Int -> VMState -> InstructionSet -> Either Termination FinalState
 executeWithin' 0 _ _ = Left $ Bugger "timed out"
