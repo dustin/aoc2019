@@ -20,6 +20,7 @@ type MInstructions s = V.MVector s Int
 
 data Paused = Paused {
   pausedPC   :: Int,
+  pausedRel  :: Int,
   pausedIns  :: Instructions,
   pausedOuts :: [Int]
   } deriving(Eq, Show)
@@ -32,11 +33,12 @@ data VMState s = VMState {
   pc      :: !Int,
   vram    :: !(MInstructions s),
   vinputs :: [Int],
-  vout    :: [Int]
+  vout    :: [Int],
+  relBase :: Int
   }
 
 fromPaused :: [Int] -> Paused -> ST s (VMState s)
-fromPaused i Paused{..} = V.thaw pausedIns >>= \ir -> pure $ VMState pausedPC ir i pausedOuts
+fromPaused i Paused{..} = V.thaw pausedIns >>= \ir -> pure $ VMState pausedPC ir i pausedOuts pausedRel
 
 data FinalState = FinalState {
   ram     :: !Instructions,
@@ -53,49 +55,55 @@ type Op s = Modes -> VMState s -> ST s (Either Termination (VMState s))
 -- the new pc (which is old pc + 4)
 op4 :: (Int -> Int -> Int) -> Op s
 op4 o (m1,m2,m3) vms@VMState{..} = do
-  a <- rd m1 (pc + 1) vram
-  b <- rd m2 (pc + 2) vram
-  wr m3 vram (pc + 3) (o a b)
+  a <- rd m1 (pc + 1) relBase vram
+  b <- rd m2 (pc + 2) relBase vram
+  wr m3 vram (pc + 3) relBase (o a b)
   pure (Right vms{pc=pc + 4})
 
-rd :: Mode -> Int -> MInstructions s -> ST s Int
-rd Position i ram  = MV.read ram =<< MV.read ram i
-rd Immediate i ram = MV.read ram i
-rd _ _ _           = undefined
+rd :: Mode -> Int -> Int -> MInstructions s -> ST s Int
+rd Position i _ ram   = MV.read ram =<< MV.read ram i
+rd Immediate i _ ram  = MV.read ram i
+rd Relative i rel ram = MV.read ram =<< (+ rel) <$> MV.read ram i
 
-wr :: Mode -> MInstructions s -> Int -> Int -> ST s ()
-wr Position ram dest val = MV.read ram dest >>= \dest' -> MV.write ram dest' val
-wr Immediate ram dest val = MV.write ram dest val
-wr _ _ _ _ = undefined
+wr :: Mode -> MInstructions s -> Int -> Int -> Int -> ST s ()
+wr Position ram dest _ val = MV.read ram dest >>= \dest' -> MV.write ram dest' val
+wr Immediate ram dest _ val = MV.write ram dest val
+wr Relative ram dest rel val = MV.read ram dest >>= \dest' -> MV.write ram (dest' + rel) val
 
 -- This function completely ignores its parameter modes.
 input :: Op s
-input _ vms@VMState{..}
-  | null vinputs = V.unsafeFreeze vram >>= \r -> pure $ Left (NoInput (Paused pc r vout))
+input (m1,_,_) vms@VMState{..}
+  | null vinputs = V.unsafeFreeze vram >>= \r -> pure $ Left (NoInput (Paused pc relBase r vout))
   | otherwise = do
-      dest <- rd Immediate (pc + 1) vram
-      wr Immediate vram dest (head vinputs)
+      d <- dest <$> MV.read vram (pc+1)
+      MV.write vram d (head vinputs)
       pure (Right vms{pc=pc + 2, vinputs=tail vinputs})
+        where dest x = x + if m1 == Relative then relBase else 0
 
 output :: Op s
 output (m,_,_) vms@VMState{..} = do
-  val <- rd m (pc + 1) vram
+  val <- rd m (pc + 1) relBase vram
   pure (Right vms{pc=pc + 2, vout=vout<>[val]})
 
 opjt :: Op s
 opjt (m1,m2,_) vms@VMState{..} = do
-  val <- rd m1 (pc + 1) vram
-  dest <- rd m2 (pc + 2) vram
+  val <- rd m1 (pc + 1) relBase vram
+  dest <- rd m2 (pc + 2) relBase vram
   pure (Right vms{pc=if val /= 0 then dest else  pc + 3})
 
 opjf :: Op s
 opjf (m1,m2,_) vms@VMState{..} = do
-  val <- rd m1 (pc + 1) vram
-  dest <- rd m2 (pc + 2) vram
+  val <- rd m1 (pc + 1) relBase vram
+  dest <- rd m2 (pc + 2) relBase vram
   pure (Right vms{pc=if val == 0 then dest else pc + 3})
 
 cmpfun :: (Int -> Int -> Bool) -> Op s
 cmpfun f = op4 (\a b -> if f a b then 1 else 0)
+
+setrel :: Op s
+setrel (m1,_,_) vms@VMState{..} = do
+  v <- rd m1 (pc+1) relBase vram
+  pure $ Right vms{pc=pc+2, relBase=relBase + v}
 
 runOp :: Operation -> Op s
 runOp OpAdd    = op4 (+)
@@ -106,7 +114,7 @@ runOp OpJT     = opjt
 runOp OpJF     = opjf
 runOp OpLT     = cmpfun (<)
 runOp OpEq     = cmpfun (==)
-runOp OpSetrel = undefined -- setrel
+runOp OpSetrel = setrel
 runOp OpHalt   = const . const . pure $ Left NormalTermination
 
 executeWithinST :: Int -> VMState s -> ST s (Either Termination FinalState)
@@ -126,7 +134,7 @@ executeWithinST n vms@VMState{..} = do
 executeWithin :: Int -> Instructions -> Either Termination FinalState
 executeWithin limit ins = runST $ do
   mv <- V.thaw ins
-  let vms = VMState{pc=0, vram=mv, vinputs=[], vout=[]}
+  let vms = VMState{pc=0, relBase=0, vram=mv, vinputs=[], vout=[]}
   either (pure . Left) (pure . Right) =<< executeWithinST limit vms
 
 execute :: Instructions -> Either Termination FinalState
@@ -136,7 +144,7 @@ execute = executeWithin 100000
 executeWithinIns :: Int -> [Int] -> Instructions -> Either Termination FinalState
 executeWithinIns limit invals ins = runST $ do
   mv <- V.thaw ins
-  let vms = VMState{pc=0, vram=mv, vinputs=invals, vout=[]}
+  let vms = VMState{pc=0, relBase=0, vram=mv, vinputs=invals, vout=[]}
   either (pure . Left) (pure . Right) =<< executeWithinST limit vms
 
 executeIn :: [Int] -> Instructions -> Either Termination FinalState

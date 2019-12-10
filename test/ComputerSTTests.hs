@@ -94,6 +94,25 @@ testD5OMG2 = assertEqual "" [1000] (outputs . fromRight undefined $ executeIn [8
 testD5OMG3 :: Assertion
 testD5OMG3 = assertEqual "" [1001] (outputs . fromRight undefined $ executeIn [11] d5ex3)
 
+d9quineEx :: Instructions
+d9quineEx = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
+
+testD9Copy :: Assertion
+testD9Copy = assertEqual "" [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99] (
+  outputs . fromRight undefined $ execute d9quineEx)
+
+d9bignumEx :: Instructions
+d9bignumEx = [1102,34915192,34915192,7,4,7,99,0]
+
+testD9bignum :: Assertion
+testD9bignum = assertEqual "" [1219070632396864] (outputs . fromRight undefined $ executeIn [] d9bignumEx)
+
+d9bigOut :: Instructions
+d9bigOut = [104,1125899906842624,99]
+
+testD9BigOut :: Assertion
+testD9BigOut = assertEqual "" [1125899906842624] (outputs . fromRight undefined $ executeIn [] d9bigOut)
+
 tests :: [TestTree]
 tests = [
   testCase "Day 2 Example" testD2Ex,
@@ -105,5 +124,8 @@ tests = [
   testCase "day 5 jump == 8" testD5OMG2,
   testCase "day 5 jump > 8" testD5OMG3,
   testCase "day 5 compares" testD5Compares,
-  testCase "day 5 jumps" testD5Jumps
+  testCase "day 5 jumps" testD5Jumps,
+  -- testCase "day 9 copy ex" testD9Copy,
+  testCase "day 9 bignum" testD9bignum,
+  testCase "day 9 big out" testD9BigOut
   ]
