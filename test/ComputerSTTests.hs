@@ -36,7 +36,7 @@ testD5ex1L = assertEqual "" [5150] $ lrun d5ex [5150]
     lrun prog ins = outputs . fromRight undefined . executeIn ins $ prog
 
 testD5ex2 :: Assertion
-testD5ex2 = assertEqual "" [1002,4,3,4,99] (ram . fromRight undefined $ execute d5ex2)
+testD5ex2 = assertEqual "" [1002,4,3,4,99] (V.take 5 . ram . fromRight undefined $ execute d5ex2)
 
 testD5Compares :: Assertion
 testD5Compares = mm [
@@ -125,7 +125,7 @@ tests = [
   testCase "day 5 jump > 8" testD5OMG3,
   testCase "day 5 compares" testD5Compares,
   testCase "day 5 jumps" testD5Jumps,
-  -- testCase "day 9 copy ex" testD9Copy,
+  testCase "day 9 copy ex" testD9Copy,
   testCase "day 9 bignum" testD9bignum,
   testCase "day 9 big out" testD9BigOut
   ]

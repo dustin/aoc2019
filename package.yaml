@@ -37,6 +37,7 @@ dependencies:
 - template-haskell
 - ghc-prim
 - doctest
+- vector-split
 
 library:
   source-dirs: src
@@ -88,6 +89,6 @@ benchmarks:
     - -O2
     - -rtsopts
     - -threaded
-    - -with-rtsopts=-ls -N
+    - -with-rtsopts=-N
     main: bench.hs
     source-dirs: test/bench
