@@ -12,7 +12,7 @@ testPart1 :: Assertion
 testPart1 = assertEqual "" ((37,25),309) =<< part1
 
 testPart2 :: Assertion
-testPart2 = assertEqual "" 0 =<< part2
+testPart2 = assertEqual "" 416  =<< part2
 
 testTiny  :: Assertion
 testTiny = assertEqual "" ((3,4),8) =<< best <$> getInput "input/day10.small"
@@ -23,11 +23,15 @@ testSmall = assertEqual "" ((5,8),33) =<< best <$> getInput "input/day10.small2"
 testLarge  :: Assertion
 testLarge = assertEqual "" ((11,13),210) =<< best <$> getInput "input/day10.large"
 
+testLarge2  :: Assertion
+testLarge2 = assertEqual "" (8,2) =<< (!! 199) . sweep <$> getInput "input/day10.large"
+
 tests :: [TestTree]
 tests = [
   testCase "tiny" testTiny,
   testCase "small" testSmall,
   testCase "large" testLarge,
+  testCase "large pt2" testLarge2,
   testCase "Part 1" testPart1,
   testCase "Part 2" testPart2
   ]
