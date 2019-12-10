@@ -2,12 +2,11 @@
 {-# LANGUAGE TypeFamilies    #-}
 
 module Computer (execute, executeWithin, executeIn, readInstructions,
-                 Instructions(..), Termination(..), defaultSet, peek, poke,
-                 modes, executeWithinIns,
-                 InstructionSet, Op, Mode(..), fromList,
+                 Instructions(..), Termination(..), peek, poke,
+                 executeWithinIns,
+                 Op, Mode(..), fromList,
                  FinalState(..), Paused(..), resume) where
 
-import qualified Data.Array      as A
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import           GHC.Exts        (IsList (..))
@@ -34,8 +33,6 @@ data Paused = Paused {
 data Termination = NormalTermination
                  | NoInput Paused
                  | Bugger String deriving (Show, Eq)
-
-type Modes = (Mode, Mode, Mode)
 
 data VMState = VMState {
   pc      :: !Integer,
@@ -116,70 +113,43 @@ setrel :: Op
 setrel (m1,_,_) vms@VMState{..} = let v = rd m1 (pc+1) relBase vram in
   Right vms{pc=pc+2, relBase=relBase + v}
 
-type InstructionSet = A.Array Integer Op
+runOp :: Operation -> Op
+runOp OpAdd    = op4 (+)
+runOp OpMul    = op4 (*)
+runOp OpIn     = input
+runOp OpOut    = output
+runOp OpJT     = opjt
+runOp OpJF     = opjf
+runOp OpLT     = cmpfun (<)
+runOp OpEq     = cmpfun (==)
+runOp OpSetrel = setrel
+runOp OpHalt   = const . const $ Left NormalTermination
 
--- This is our instruction set.  It's pretty simple now, but may grow.
-defaultSet :: InstructionSet
-defaultSet = A.array (0,100) [(x, op x) | x <- [0..100]]
-  where
-    op    99 = const . const $ Left NormalTermination
-    op     1 = op4 (+)
-    op     2 = op4 (*)
-    op     3 = input
-    op     4 = output
-    op     5 = opjt
-    op     6 = opjf
-    op     7 = cmpfun (<)
-    op     8 = cmpfun (==)
-    op     9 = setrel
-    op     x = const . const . Left $ Bugger ("invalid instruction: " <> show x)
-
-modes :: Integer -> (Mode, Mode, Mode)
-modes x = (nmode 100, nmode 1000, nmode 10000)
-  where nmode pl = amode $ (fromIntegral x) `mod` (pl*10) `div` pl
-
-executeWithin' :: Int -> VMState -> InstructionSet -> Either Termination FinalState
-executeWithin' 0 _ _ = Left $ Bugger "timed out"
-executeWithin' n vms@VMState{..} iSet = let i = peek pc vram
-                                            basei = i `mod` 100
-                                            imodes = modes i
-                                            e = (iSet A.! basei) imodes vms in
-                                          -- trace ("doing op: " <> show basei <> " " <> show imodes) $
-                                          case e of
-                                            Left x     -> terminate x
-                                            Right vms' -> executeWithin' (n - 1) vms' iSet
+executeWithin' :: Int -> VMState -> Either Termination FinalState
+executeWithin' 0 _ = Left $ Bugger "timed out"
+executeWithin' n vms@VMState{..} = let (op, modes) = decodeInstruction (peek pc vram)
+                                       e = runOp op modes vms in
+                                     case e of
+                                       Left x     -> terminate x
+                                       Right vms' -> executeWithin' (n - 1) vms'
 
     where terminate NormalTermination = Right $ FinalState vram vout
           terminate x                 = Left x
 
 executeWithin :: Int -> Instructions -> Either Termination FinalState
 executeWithin limit ins = let vms = VMState{pc=0, relBase=0, vram=ins, vinputs=[], vout=[]} in
-                            executeWithin' limit vms defaultSet
+                            executeWithin' limit vms
 
 execute :: Instructions -> Either Termination FinalState
 execute = executeWithin 100000
 
 executeWithinIns :: Int -> [Integer] -> Instructions -> Either Termination FinalState
 executeWithinIns limit invals ins = let vms = VMState{pc=0, relBase=0, vram=ins, vinputs=invals, vout=[]} in
-                                      executeWithin' limit vms defaultSet
+                                      executeWithin' limit vms
 
 executeIn :: [Integer] -> Instructions -> Either Termination FinalState
 executeIn = executeWithinIns 100000
 
 -- Resume a paused VM.
 resume :: Paused -> [Integer] -> Either Termination FinalState
-resume p ins = executeWithin' 100000 (fromPaused ins p) defaultSet
-
-{- Immutable Vector version
-execute' :: Int -> Instructions -> Instructions
-execute' x xs = case xs V.! x of
-                 99 -> xs
-                 1  -> op4 (+)
-                 2  -> op4 (*)
-  where
-    op4 o = execute' (x+4) (xs & ix dest .~ o opa opb)
-      where opa   = att 1
-            opb   = att 2
-            dest  = xs V.! (x + 3)
-            att n = xs V.! (xs V.! (x + n))
--}
+resume p ins = executeWithin' 100000 (fromPaused ins p)

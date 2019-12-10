@@ -13,11 +13,13 @@ import qualified Day6Tests
 import qualified Day7Tests
 import qualified Day8Tests
 import qualified Day9Tests
+import qualified OKComputerTests
 import qualified SearchTests
 
 tests :: [TestTree]
 tests = [
   testGroup "search" SearchTests.tests,
+  testGroup "OK computer" OKComputerTests.tests,
   testGroup "computer" ComputerTests.tests,
   testGroup "computer ST" ComputerSTTests.tests,
   testGroup "day 1" Day1Tests.tests,

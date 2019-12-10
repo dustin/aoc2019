@@ -29,8 +29,6 @@ data Termination = NormalTermination
                  | NoInput Paused
                  | Bugger String deriving (Show, Eq)
 
-type Modes = (Mode, Mode, Mode)
-
 data VMState s = VMState {
   pc      :: !Int,
   vram    :: !(MInstructions s),

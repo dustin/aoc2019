@@ -11,6 +11,7 @@ import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck as QC
 
 import           Computer
+import           OKComputer
 
 d1ex :: Instructions
 d1ex = [1,9,10,3,2,3,11,0,99,30,40,50]
@@ -113,17 +114,6 @@ d9bigOut = [104,1125899906842624,99]
 testD9BigOut :: Assertion
 testD9BigOut = assertEqual "" [1125899906842624] (outputs . fromRight undefined $ executeIn [] d9bigOut)
 
-testModes :: Assertion
-testModes =  mm [(4, (Position, Position, Position)),
-                 (1002, (Position, Immediate, Position)),
-                 (10002, (Position, Position, Immediate)),
-                 (22202, (Relative, Relative, Relative))
-                 ]
-  where
-    mm :: [(Integer, (Mode, Mode, Mode))] -> Assertion
-    mm = mapM_ one
-    one (num, want) = assertEqual (show num) want (modes num)
-
 tests :: [TestTree]
 tests = [
   testCase "Day 2 Example" testD2Ex,
@@ -131,7 +121,6 @@ tests = [
   testCase "day 5 simple" testD5ex1,
   testCase "day 5 simple (lrun)" testD5ex1L,
   testCase "day 5 ex 2" testD5ex2,
-  testCase "modes" testModes,
   testCase "day 5 jump < 8" testD5OMG,
   testCase "day 5 jump == 8" testD5OMG2,
   testCase "day 5 jump > 8" testD5OMG3,
