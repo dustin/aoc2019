@@ -13,7 +13,7 @@ import           Test.Tasty.QuickCheck as QC
 import           Computer
 import           OKComputer
 
-d1ex :: Instructions
+d1ex :: Instructions Int
 d1ex = [1,9,10,3,2,3,11,0,99,30,40,50]
 
 testD2Ex :: Assertion
@@ -22,10 +22,10 @@ testD2Ex = assertEqual "" 3500 (peek 0 $ ram . fromRight undefined $ execute d1e
 testTimeout :: Assertion
 testTimeout = assertEqual "" (Left $ Bugger "timed out") (executeWithin 2 d1ex)
 
-d5ex :: Instructions
+d5ex :: Instructions Int
 d5ex = [3,0,4,0,99]
 
-d5ex2 :: Instructions
+d5ex2 :: Instructions Int
 d5ex2 = [1002,4,3,4,33]
 
 testD5ex1 :: Assertion
@@ -47,19 +47,19 @@ testD5Compares = mm [
   (ex4, 5, 1), (ex4, 9, 0)
   ]
   where
-    mm :: [(Instructions, Integer, Integer)] -> Assertion
+    mm :: [(Instructions Int, Int, Int)] -> Assertion
     mm = mapM_ aProg
-    run :: Instructions -> Integer -> Integer
+    run :: Instructions Int -> Int -> Int
     run prog num = (head . outputs . fromRight undefined $ executeIn [num] prog)
-    aProg :: (Instructions, Integer, Integer) -> Assertion
+    aProg :: (Instructions Int, Int, Int) -> Assertion
     aProg (prog, num, want) = assertEqual (show prog <> "@" <> show num) want (run prog num)
-    ex1 :: Instructions
+    ex1 :: Instructions Int
     ex1 = [3,9,8,9,10,9,4,9,99,-1,8]
-    ex2 :: Instructions
+    ex2 :: Instructions Int
     ex2 = [3,9,7,9,10,9,4,9,99,-1,8]
-    ex3 :: Instructions
+    ex3 :: Instructions Int
     ex3 = [3,3,1108,-1,8,3,4,3,99]
-    ex4 :: Instructions
+    ex4 :: Instructions Int
     ex4 = [3,3,1107,-1,8,3,4,3,99]
 
 
@@ -69,19 +69,19 @@ testD5Jumps = mm [
   (ex2, 0, 0), (ex2, 9, 1)
   ]
   where
-    mm :: [(Instructions, Integer, Integer)] -> Assertion
+    mm :: [(Instructions Int, Int, Int)] -> Assertion
     mm = mapM_ aProg
-    run :: Instructions -> Integer -> Integer
+    run :: Instructions Int -> Int -> Int
     run prog num = (head . outputs . fromRight undefined $ executeIn [num] prog)
-    aProg :: (Instructions, Integer, Integer) -> Assertion
+    aProg :: (Instructions Int, Int, Int) -> Assertion
     aProg (prog, num, want) = assertEqual (show prog <> "@" <> show num) want (run prog num)
-    ex1 :: Instructions
+    ex1 :: Instructions Int
     ex1 = [3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9]
-    ex2 :: Instructions
+    ex2 :: Instructions Int
     ex2 = [3,3,1105,-1,9,1101,0,0,12,4,12,99,1]
 
 
-d5ex3 :: Instructions
+d5ex3 :: Instructions Int
 d5ex3 = [3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,
                   1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,
                   999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99]
@@ -95,20 +95,20 @@ testD5OMG2 = assertEqual "" [1000] (outputs . fromRight undefined $ executeIn [8
 testD5OMG3 :: Assertion
 testD5OMG3 = assertEqual "" [1001] (outputs . fromRight undefined $ executeIn [11] d5ex3)
 
-d9quineEx :: Instructions
+d9quineEx :: Instructions Int
 d9quineEx = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99]
 
 testD9Copy :: Assertion
 testD9Copy = assertEqual "" [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99] (
   outputs . fromRight undefined $ execute d9quineEx)
 
-d9bignumEx :: Instructions
+d9bignumEx :: Instructions Int
 d9bignumEx = [1102,34915192,34915192,7,4,7,99,0]
 
 testD9bignum :: Assertion
 testD9bignum = assertEqual "" [1219070632396864] (outputs . fromRight undefined $ executeIn [] d9bignumEx)
 
-d9bigOut :: Instructions
+d9bigOut :: Instructions Int
 d9bigOut = [104,1125899906842624,99]
 
 testD9BigOut :: Assertion

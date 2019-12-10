@@ -11,7 +11,7 @@ import           Test.Tasty.QuickCheck as QC
 import           Computer
 import           Day5
 
-compute :: [Integer] -> IO (Either Termination [Integer])
+compute :: [Int] -> IO (Either (Termination Int) [Int])
 compute myinput = do
   ins <- getInput
   pure $ outputs <$> executeIn myinput ins

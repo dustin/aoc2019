@@ -8,10 +8,10 @@ import           Data.List                   (permutations)
 
 import           Computer
 
-getInput :: IO Instructions
+getInput :: IO (Instructions Int)
 getInput = readInstructions "input/day7"
 
-findMaxThrust :: Instructions -> Either Termination Integer
+findMaxThrust :: Instructions Int -> Either (Termination Int) Int
 findMaxThrust prog = fmap maximum <$> traverse runList $ permutations [0..4]
   where
     runList = foldM (flip runOnce) 0
@@ -19,7 +19,7 @@ findMaxThrust prog = fmap maximum <$> traverse runList $ permutations [0..4]
 
 -- This was: `fmap maximum <$> traverse run $ permutations [5..9]` but
 -- I haven't been able to get that to parallelize well.
-findFeedback :: Instructions -> Integer
+findFeedback :: Instructions Int -> Int
 findFeedback prog = maximum . fmap maximum . sequenceA . parMap rseq run $ permutations [5..9]
   where
     run = next . start . seed
@@ -34,8 +34,8 @@ findFeedback prog = maximum . fmap maximum . sequenceA . parMap rseq run $ permu
       next $ (p2, resume pa2{pausedOuts=[]} (pausedOuts pa1)) : xs <> [(p1, Left (NoInput pa1{pausedOuts=[]}))]
     forward x xs = error ("Unhandled forward: " <> show x <> " : " <> show xs)
 
-part1 :: IO (Either Termination Integer)
+part1 :: IO (Either (Termination Int) Int)
 part1 = findMaxThrust <$> getInput
 
-part2 :: IO Integer
+part2 :: IO Int
 part2 = findFeedback <$> getInput

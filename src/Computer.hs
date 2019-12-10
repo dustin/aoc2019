@@ -13,44 +13,44 @@ import           GHC.Exts        (IsList (..))
 
 import           OKComputer
 
-newtype Instructions = Instructions (Map Integer Integer) deriving (Show, Eq)
+newtype Instructions a = Instructions (Map a a) deriving (Show, Eq)
 
-instance IsList Instructions where
-  type Item Instructions = Integer
+instance Integral a => IsList (Instructions a) where
+  type Item (Instructions a) = a
   fromList ins = Instructions (M.fromList $ zip [0..] ins)
   toList (Instructions ins) = M.elems ins
 
-readInstructions :: FilePath -> IO Instructions
+readInstructions :: (Integral a, Read a) => FilePath -> IO (Instructions a)
 readInstructions fn = fromList . fmap read . words . map (\x -> if x == ',' then ' ' else x) <$> readFile fn
 
-data Paused = Paused {
-  pausedPC   :: Integer,
-  pausedRel  :: Integer,
-  pausedIns  :: Instructions,
-  pausedOuts :: [Integer]
+data Paused a = Paused {
+  pausedPC   :: a,
+  pausedRel  :: a,
+  pausedIns  :: Instructions a,
+  pausedOuts :: [a]
   } deriving(Eq, Show)
 
-data Termination = NormalTermination
-                 | NoInput Paused
+data Termination a = NormalTermination
+                 | NoInput (Paused a)
                  | Bugger String deriving (Show, Eq)
 
-data VMState = VMState {
-  pc      :: !Integer,
-  vram    :: !Instructions,
-  vinputs :: ![Integer],
-  vout    :: ![Integer],
-  relBase :: !Integer
+data VMState a = VMState {
+  pc      :: !a,
+  vram    :: !(Instructions a),
+  vinputs :: ![a],
+  vout    :: ![a],
+  relBase :: !a
   }
 
-fromPaused :: [Integer] -> Paused -> VMState
+fromPaused :: [a] -> Paused a -> VMState a
 fromPaused i Paused{..} = VMState pausedPC pausedIns i pausedOuts pausedRel
 
-data FinalState = FinalState {
-  ram     :: !Instructions,
-  outputs :: ![Integer]
+data FinalState a = FinalState {
+  ram     :: !(Instructions a),
+  outputs :: ![a]
   } deriving(Show, Eq)
 
-type Op = Modes -> VMState -> Either Termination VMState
+type Op a = Modes -> VMState a -> Either (Termination a) (VMState a)
 
 -- op4 is a four-int operation.  The first int is the opcode.  We know that by the time we got here.
 -- Next are two inputs, a and b.  The last is the destination.
@@ -58,30 +58,30 @@ type Op = Modes -> VMState -> Either Termination VMState
 -- We apply the given binary operation to the two values at the given
 -- addresses and store the result in the desired location, returning
 -- the new pc (which is old pc + 4)
-op4 :: (Integer -> Integer -> Integer) -> Op
+op4 :: Integral a => (a -> a -> a) -> Op a
 op4 o (m1,m2,m3) vms@VMState{..} =
   let a = rd m1 (pc + 1) relBase vram
       b = rd m2 (pc + 2) relBase vram
       ram' = wr m3 vram (pc + 3) relBase (o a b) in
     Right vms{pc=pc + 4, vram=ram'}
 
-peek :: Integer -> Instructions -> Integer
+peek :: Integral a => a -> Instructions a -> a
 peek k (Instructions m) =  M.findWithDefault 0 k m
 
-poke :: Integer -> Integer -> Instructions -> Instructions
+poke :: Ord a => a -> a -> Instructions a -> Instructions a
 poke k v (Instructions m) = Instructions (M.insert k v m)
 
-rd :: Mode -> Integer -> Integer -> Instructions -> Integer
+rd :: Integral a => Mode -> a -> a -> Instructions a -> a
 rd Position i _ ram   = rd Immediate (peek i ram) 0 ram
 rd Immediate i _ ram  = peek i ram
 rd Relative i rel ram = peek ((peek i ram)+rel) ram
 
-wr :: Mode -> Instructions -> Integer -> Integer -> Integer -> Instructions
+wr :: Integral a => Mode -> Instructions a -> a -> a -> a -> Instructions a
 wr Position ram dest _ val   = poke (rd Immediate dest 0 ram) val ram
 wr Immediate ram dest _ val  = poke dest val ram
 wr Relative ram dest rel val = poke ((peek dest ram)+rel) val ram
 
-input :: Op
+input :: Integral a => Op a
 input (m1,_,_) vms@VMState{..}
   | null vinputs = Left (NoInput (Paused pc relBase vram vout))
   | otherwise = let pos = peek (pc + 1) vram
@@ -91,29 +91,29 @@ input (m1,_,_) vms@VMState{..}
     dest x = x + if m1 == Relative then relBase else 0
 
 
-output :: Op
+output :: Integral a => Op a
 output (m,_,_) vms@VMState{..} =
   let val = rd m (pc + 1) relBase vram in
     Right vms{pc=pc + 2, vout=vout<>[val]}
 
-opjt :: Op
+opjt :: Integral a => Op a
 opjt (m1,m2,_) vms@VMState{..} = let val = rd m1 (pc + 1) relBase vram
                                      dest = rd m2 (pc + 2) relBase vram in
                                    Right vms{pc=if val /= 0 then dest else  pc + 3}
 
-opjf :: Op
+opjf :: Integral a => Op a
 opjf (m1,m2,_) vms@VMState{..} = let val = rd m1 (pc + 1) relBase vram
                                      dest = rd m2 (pc + 2) relBase vram in
                                    Right vms{pc=if val == 0 then dest else pc + 3}
 
-cmpfun :: (Integer -> Integer -> Bool) -> Op
+cmpfun :: Integral a => (a -> a -> Bool) -> Op a
 cmpfun f = op4 (\a b -> if f a b then 1 else 0)
 
-setrel :: Op
+setrel :: Integral a => Op a
 setrel (m1,_,_) vms@VMState{..} = let v = rd m1 (pc+1) relBase vram in
   Right vms{pc=pc+2, relBase=relBase + v}
 
-runOp :: Operation -> Op
+runOp :: Integral a => Operation -> Op a
 runOp OpAdd    = op4 (+)
 runOp OpMul    = op4 (*)
 runOp OpIn     = input
@@ -125,7 +125,7 @@ runOp OpEq     = cmpfun (==)
 runOp OpSetrel = setrel
 runOp OpHalt   = const . const $ Left NormalTermination
 
-executeWithin' :: Int -> VMState -> Either Termination FinalState
+executeWithin' :: Integral a => Int -> VMState a -> Either (Termination a) (FinalState a)
 executeWithin' 0 _ = Left $ Bugger "timed out"
 executeWithin' n vms@VMState{..} = let (op, modes) = decodeInstruction (peek pc vram)
                                        e = runOp op modes vms in
@@ -136,20 +136,20 @@ executeWithin' n vms@VMState{..} = let (op, modes) = decodeInstruction (peek pc 
     where terminate NormalTermination = Right $ FinalState vram vout
           terminate x                 = Left x
 
-executeWithin :: Int -> Instructions -> Either Termination FinalState
+executeWithin :: Integral a => Int -> Instructions a -> Either (Termination a) (FinalState a)
 executeWithin limit ins = let vms = VMState{pc=0, relBase=0, vram=ins, vinputs=[], vout=[]} in
                             executeWithin' limit vms
 
-execute :: Instructions -> Either Termination FinalState
+execute :: Integral a => Instructions a -> Either (Termination a) (FinalState a)
 execute = executeWithin 100000
 
-executeWithinIns :: Int -> [Integer] -> Instructions -> Either Termination FinalState
+executeWithinIns :: Integral a => Int -> [a] -> Instructions a -> Either (Termination a) (FinalState a)
 executeWithinIns limit invals ins = let vms = VMState{pc=0, relBase=0, vram=ins, vinputs=invals, vout=[]} in
                                       executeWithin' limit vms
 
-executeIn :: [Integer] -> Instructions -> Either Termination FinalState
+executeIn :: Integral a => [a] -> Instructions a -> Either (Termination a) (FinalState a)
 executeIn = executeWithinIns 100000
 
 -- Resume a paused VM.
-resume :: Paused -> [Integer] -> Either Termination FinalState
+resume :: Integral a => Paused a -> [a] -> Either (Termination a) (FinalState a)
 resume p ins = executeWithin' 100000 (fromPaused ins p)
