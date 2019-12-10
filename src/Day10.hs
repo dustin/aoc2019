@@ -71,14 +71,12 @@ best w = maximumOn snd cz
 part1 :: IO ((Int,Int),Int)
 part1 = best <$> getInput "input/day10"
 
-sweep :: World -> [(Int,Int)]
-sweep w = sortOn (θ o) . sees w $ o
-  where o = fst . best $ w
-        θ (x1,y1) (x2,y2) = -atan2 (x2 -. x1) (y2 -. y1) + pi
-          where
-            (-.) :: Int -> Int -> Double
-            a -. b = fromIntegral (a - b)
+sweep :: World -> (Int,Int) -> [(Int,Int)]
+sweep w o = sortOn (θ o) . sees w $ o
+  where θ (x1,y1) (x2,y2) = -atan2 (x2 -. x1) (y2 -. y1) + pi
+        (-.) :: Int -> Int -> Double
+        a -. b = fromIntegral (a - b)
 
 part2 :: IO Int
-part2 = getInput "input/day10" >>= pure . ans . (!! 199) . sweep
+part2 = getInput "input/day10" >>= \w -> pure . ans . (!! 199) $ sweep w (fst (best w))
   where ans (x,y) = x * 100 + y

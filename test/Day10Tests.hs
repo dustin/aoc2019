@@ -24,7 +24,7 @@ testLarge  :: Assertion
 testLarge = assertEqual "" ((11,13),210) =<< best <$> getInput "input/day10.large"
 
 testLarge2  :: Assertion
-testLarge2 = assertEqual "" (8,2) =<< (!! 199) . sweep <$> getInput "input/day10.large"
+testLarge2 = assertEqual "" (8,2) =<< (!! 199) . (`sweep` (11,13)) <$> getInput "input/day10.large"
 
 tests :: [TestTree]
 tests = [
