@@ -1,12 +1,11 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module ComputerST (execute, executeWithin, executeIn, readInstructions,
-                   Instructions, Termination(..), defaultSet, modes,
-                   executeWithinST, InstructionSet, VMState(..), Op, Mode(..),
+                   Instructions, Termination(..),
+                   executeWithinST, VMState(..), Op, Mode(..),
                    rd, wr, FinalState(..), Paused(..), resume) where
 
 import           Control.Monad.ST
-import qualified Data.Array                  as A
 import qualified Data.Vector.Unboxed         as V
 import qualified Data.Vector.Unboxed.Mutable as MV
 
@@ -98,37 +97,27 @@ opjf (m1,m2,_) vms@VMState{..} = do
 cmpfun :: (Int -> Int -> Bool) -> Op s
 cmpfun f = op4 (\a b -> if f a b then 1 else 0)
 
-type InstructionSet s = A.Array Int (Op s)
+runOp :: Operation -> Op s
+runOp OpAdd    = op4 (+)
+runOp OpMul    = op4 (*)
+runOp OpIn     = input
+runOp OpOut    = output
+runOp OpJT     = opjt
+runOp OpJF     = opjf
+runOp OpLT     = cmpfun (<)
+runOp OpEq     = cmpfun (==)
+runOp OpSetrel = undefined -- setrel
+runOp OpHalt   = const . const . pure $ Left NormalTermination
 
--- This is our instruction set.  It's pretty simple now, but may grow.
-defaultSet :: InstructionSet s
-defaultSet = A.array (0,100) [(x, op x) | x <- [0..100]]
-  where
-    op    99 = const . const . pure $ Left NormalTermination
-    op     1 = op4 (+)
-    op     2 = op4 (*)
-    op     3 = input
-    op     4 = output
-    op     5 = opjt
-    op     6 = opjf
-    op     7 = cmpfun (<)
-    op     8 = cmpfun (==)
-    op     x = const . const . pure . Left $ Bugger ("invalid instruction: " <> show x)
-
-modes :: Int -> (Mode, Mode, Mode)
-modes x = (nmode 100, nmode 1000, nmode 10000)
-  where nmode pl = amode $ x `mod` (pl*10) `div` pl
-
-executeWithinST :: Int -> VMState s -> InstructionSet s -> ST s (Either Termination FinalState)
-executeWithinST 0 _ _ = pure . Left $ Bugger "timed out"
-executeWithinST n vms@VMState{..} iSet = do
+executeWithinST :: Int -> VMState s -> ST s (Either Termination FinalState)
+executeWithinST 0 _ = pure . Left $ Bugger "timed out"
+executeWithinST n vms@VMState{..} = do
   i <- MV.read vram pc
-  let basei = i `mod` 100
-      imodes = modes i
-  e <- (iSet A.! basei) imodes vms
+  let (op, modes) = decodeInstruction i
+  e <- runOp op modes vms
   case e of
     Left x     -> terminate x
-    Right vms' -> executeWithinST (n - 1) vms' iSet
+    Right vms' -> executeWithinST (n - 1) vms'
 
     where terminate NormalTermination = V.unsafeFreeze vram >>= \r -> pure $ Right (FinalState r vout)
           terminate x                 = pure $ Left x
@@ -138,7 +127,7 @@ executeWithin :: Int -> Instructions -> Either Termination FinalState
 executeWithin limit ins = runST $ do
   mv <- V.thaw ins
   let vms = VMState{pc=0, vram=mv, vinputs=[], vout=[]}
-  either (pure . Left) (pure . Right) =<< executeWithinST limit vms defaultSet
+  either (pure . Left) (pure . Right) =<< executeWithinST limit vms
 
 execute :: Instructions -> Either Termination FinalState
 execute = executeWithin 100000
@@ -148,7 +137,7 @@ executeWithinIns :: Int -> [Int] -> Instructions -> Either Termination FinalStat
 executeWithinIns limit invals ins = runST $ do
   mv <- V.thaw ins
   let vms = VMState{pc=0, vram=mv, vinputs=invals, vout=[]}
-  either (pure . Left) (pure . Right) =<< executeWithinST limit vms defaultSet
+  either (pure . Left) (pure . Right) =<< executeWithinST limit vms
 
 executeIn :: [Int] -> Instructions -> Either Termination FinalState
 executeIn = executeWithinIns 100000
@@ -157,7 +146,7 @@ executeIn = executeWithinIns 100000
 resume :: Paused -> [Int] -> Either Termination FinalState
 resume p ins = runST $ do
   vms <- fromPaused ins p
-  either (pure . Left) (pure . Right) =<< executeWithinST 100000 vms defaultSet
+  either (pure . Left) (pure . Right) =<< executeWithinST 100000 vms
 
 {- Immutable Vector version
 execute' :: Int -> Instructions -> Instructions

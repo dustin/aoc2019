@@ -94,17 +94,6 @@ testD5OMG2 = assertEqual "" [1000] (outputs . fromRight undefined $ executeIn [8
 testD5OMG3 :: Assertion
 testD5OMG3 = assertEqual "" [1001] (outputs . fromRight undefined $ executeIn [11] d5ex3)
 
-testModes :: Assertion
-testModes =  mm [(4, (Position, Position, Position)),
-                 (1002, (Position, Immediate, Position)),
-                 (10002, (Position, Position, Immediate)),
-                 (22202, (Relative, Relative, Relative))
-                 ]
-  where
-    mm :: [(Int, (Mode, Mode, Mode))] -> Assertion
-    mm = mapM_ one
-    one (num, want) = assertEqual (show num) want (modes num)
-
 tests :: [TestTree]
 tests = [
   testCase "Day 2 Example" testD2Ex,
@@ -112,7 +101,6 @@ tests = [
   testCase "day 5 simple" testD5ex1,
   testCase "day 5 simple (lrun)" testD5ex1L,
   testCase "day 5 ex 2" testD5ex2,
-  testCase "modes" testModes,
   testCase "day 5 jump < 8" testD5OMG,
   testCase "day 5 jump == 8" testD5OMG2,
   testCase "day 5 jump > 8" testD5OMG3,
