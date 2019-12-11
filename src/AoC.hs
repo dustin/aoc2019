@@ -12,7 +12,8 @@ Common stuff across AoC solutions.
 module AoC (
   Parser, parseFile, parseLit,
   mdist2, mdist3, mdist4,
-  zipt2, zipt3, zipt4
+  zipt2, zipt3, zipt4,
+  succ', pred'
   ) where
 
 import           Data.Text             (Text, pack)
@@ -58,3 +59,15 @@ mdist4 as bs = let (a,b,c,d) = zipt4 mdist1 as bs in a+b+c+d
 -- | One dimensional manhattan distance (for combining with the above).
 mdist1 :: Int -> Int -> Int
 mdist1 a b = abs (a - b)
+
+-- | A circular succ
+succ' :: (Bounded a, Enum a, Eq a) => a -> a
+succ' a
+  | a == maxBound = minBound
+  | otherwise = succ a
+
+-- | A circular pred
+pred' :: (Bounded a, Enum a, Eq a) => a -> a
+pred' a
+  | a == minBound = maxBound
+  | otherwise = pred a
