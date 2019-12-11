@@ -5,6 +5,7 @@ import           Test.Tasty
 import qualified ComputerSTTests
 import qualified ComputerTests
 import qualified Day10Tests
+import qualified Day11Tests
 import qualified Day1Tests
 import qualified Day2Tests
 import qualified Day3Tests
@@ -32,7 +33,8 @@ tests = [
   testGroup "day 7" Day7Tests.tests,
   testGroup "day 8" Day8Tests.tests,
   testGroup "day 9" Day9Tests.tests,
-  testGroup "day 10" Day10Tests.tests
+  testGroup "day 10" Day10Tests.tests,
+  testGroup "day 11" Day11Tests.tests
   ]
 
 main :: IO ()
