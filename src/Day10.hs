@@ -3,10 +3,11 @@
 
 module Day10 where
 
-import           Data.List       (intercalate, sortOn)
-import           Data.List.Extra (maximumOn)
-import           Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
+import           Control.Parallel.Strategies (parList, parMap, rseq, using)
+import           Data.List                   (intercalate, sortOn)
+import           Data.List.Extra             (maximumOn)
+import           Data.Map.Strict             (Map)
+import qualified Data.Map.Strict             as Map
 
 import           AoC
 import           Vis
@@ -44,7 +45,7 @@ line (x1,y1) (x2,y2)
 sees :: World -> (Int,Int) -> [(Int,Int)]
 sees w p = flt [] aa
   where
-    aa = sortOn (mdist2 p) $ allSteroids w
+    aa = sortOn (mdist2 p) (allSteroids w) `using` parList rseq
 
     flt l [] = l
     flt ks (x:xs)
@@ -67,6 +68,11 @@ best :: World -> ((Int,Int),Int)
 best w = maximumOn snd cz
   where aa = allSteroids w
         cz = zip aa (length . sees w <$> aa)
+
+bestPar :: World -> ((Int,Int),Int)
+bestPar w = maximumOn snd cz
+  where aa = allSteroids w
+        cz = zip aa (parMap rseq (length . sees w) aa)
 
 part1 :: IO ((Int,Int),Int)
 part1 = best <$> getInput "input/day10"

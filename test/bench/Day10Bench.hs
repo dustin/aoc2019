@@ -21,6 +21,8 @@ tests :: [Benchmark]
 tests = [
   env input $ \ ~w -> bgroup "" [
       bench "core matches" $ nf (flip sees (37,25)) w,
-      bench "sweep" $ nf (`sweep` (37,25)) w
+      bench "sweep" $ nf (`sweep` (37,25)) w,
+      bench "best" $ nf best w,
+      bench "best (par)" $ nf bestPar w
   ]
   ]
