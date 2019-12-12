@@ -3,9 +3,11 @@
 module Vis where
 
 import           Codec.Picture   (PixelRGB8 (..), generateImage, writePng)
+import           Data.Coerce     (coerce)
 import           Data.List       (intercalate)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
+import           Data.Semigroup  (Max (..), Min (..))
 
 white :: PixelRGB8
 white = PixelRGB8 255 255 255
@@ -39,11 +41,11 @@ mapPixelFunTrans m l = mapPixelFun m (\x -> Map.findWithDefault green x cm)
   where cm = Map.fromList l
 
 listBounds :: Integral a => [(a,a)] -> ((Int,Int),(Int,Int))
-listBounds l = ((fromIntegral $ minimum xs, fromIntegral $ minimum ys),
-                (fromIntegral $ maximum xs, fromIntegral $ maximum ys))
+listBounds = coerce . foldMap f
   where
-    xs = fst <$> l
-    ys = snd <$> l
+    f :: Integral a => (a,a) -> ((Min Int, Min Int), (Max Int, Max Int))
+    f (x,y) = (((Min . fromIntegral) x, (Min . fromIntegral) y),
+               ((Max . fromIntegral) x, (Max . fromIntegral) y))
 
 instance Integral a => Bounded2D (Map (a, a) b) where
   bounds2d = listBounds . Map.keys
