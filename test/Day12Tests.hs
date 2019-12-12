@@ -20,6 +20,6 @@ testPart2 = assertEqual "" 292653556339368 =<< part2
 tests :: [TestTree]
 tests = [
   testCase "Part 1" testPart1,
-  testCase "Part 2 small" testPart2small
-  -- testCase "Part 2" testPart2
+  testCase "Part 2 small" testPart2small,
+  testCase "Part 2" testPart2
   ]

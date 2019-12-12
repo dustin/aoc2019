@@ -5,7 +5,7 @@
 module Day12 where
 
 import           Control.Parallel.Strategies (parMap, rdeepseq)
-import           Data.List                   (elemIndex, foldl')
+import           Data.List                   (elemIndex, foldl', transpose)
 import           Data.Maybe                  (fromJust)
 import           Text.Megaparsec             (endBy)
 import           Text.Megaparsec.Char        (space, string)
@@ -82,24 +82,24 @@ posCycles' ls = parMap rdeepseq axis [fst3, snd3, thrd]
     fc :: [[Int]] -> Int
     fc l = snd3 . findCycle id $ zip l $ tail l
 
-type Four = ((Int,Int), (Int,Int), (Int,Int), (Int,Int))
-
-posCycles :: [[Moon]] -> [Int]
-posCycles ls = parMap rdeepseq axis [fst3, snd3, thrd]
+posCycles :: [Moon] -> [Int]
+posCycles ls = axis <$> axes
   where
-    maxes :: Moon -> ((Int,Int), (Int,Int), (Int,Int))
-    maxes (Moon (x,y,z) (vx,vy,vz)) = ((x,vx), (y,vy), (z,vz))
-
-    axes :: [Moon] -> ([(Int,Int)], [(Int,Int)], [(Int,Int)])
-    axes moon = (fst3 <$> m, snd3 <$> m, thrd <$> m)
-      where m = maxes <$> moon
-
-    poses :: [([(Int,Int)], [(Int,Int)], [(Int,Int)])]
-    poses = axes <$> ls
-
-    axis = fc . (<$> poses)
-
+    maxes (Moon (x,y,z) (vx,vy,vz)) = [(x,vx), (y,vy), (z,vz)]
+    astep = fmap moveAxis . gravitizeAxes
+    axes = transpose $ map maxes ls
+    axis = fc . iterate astep
     fc (x:xs) = succ . fromJust $ elemIndex x xs
+
+    gravitizeAxis (x,v) (x',_) = (x, v + delta x x')
+      where delta a b
+              | a == b = 0
+              | a < b = 1
+              | otherwise = -1
+
+    gravitizeAxes a = (\m -> foldl' gravitizeAxis m a) <$> a
+
+    moveAxis (x,v) = (x+v, v)
 
 part1 :: IO Int
 part1 = do
@@ -110,8 +110,7 @@ part1 = do
 part2On :: FilePath -> IO Int
 part2On fn = do
   moons <- getInput fn
-  let steps = iterate step moons
-      cycs = posCycles steps
+  let cycs = posCycles moons
   pure $ foldr lcm 1 cycs
 
 part2 :: IO Int
