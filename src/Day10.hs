@@ -21,11 +21,10 @@ display :: World -> String
 display (World m) = drawString m (mapCharFun m id)
 
 getInput :: FilePath -> IO World
-getInput fn = parseInput . lines <$> readFile fn
+getInput fn = parseInput <$> readFile fn
 
-parseInput :: [String] -> World
-parseInput lns = World $ Map.fromList $ concatMap (\(y,r) -> map (\(x,c) -> ((x,y),p c)) $ zip [0..] r) $ zip [0..] lns
-  where p = id
+parseInput :: String -> World
+parseInput = World . parseGrid id
 
 allSteroids :: World -> [(Int,Int)]
 allSteroids (World wm) = Map.keys . Map.filter (== '#') $ wm

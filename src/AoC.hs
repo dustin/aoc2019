@@ -10,12 +10,14 @@ Portability : POSIX
 Common stuff across AoC solutions.
 -}
 module AoC (
-  Parser, parseFile, parseLit,
+  Parser, parseFile, parseLit, parseGrid,
   mdist2, mdist3, mdist4,
   zipt2, zipt3, zipt4,
   succ', pred'
   ) where
 
+import           Data.Map.Strict       (Map)
+import qualified Data.Map.Strict       as Map
 import           Data.Text             (Text, pack)
 import           Data.Void             (Void)
 import           Text.Megaparsec       (Parsec, parse)
@@ -71,3 +73,7 @@ pred' :: (Bounded a, Enum a, Eq a) => a -> a
 pred' a
   | a == minBound = maxBound
   | otherwise = pred a
+
+-- | Parse a grid into a map of (x,y) pairs.
+parseGrid :: (Char -> a) -> String -> Map (Int,Int) a
+parseGrid f = Map.fromList . concatMap (\(y,r) -> map (\(x,c) -> ((x,y),f c)) $ zip [0..] r) . zip [0..] . lines
