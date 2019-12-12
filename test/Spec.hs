@@ -7,6 +7,7 @@ import qualified ComputerSTTests
 import qualified ComputerTests
 import qualified Day10Tests
 import qualified Day11Tests
+import qualified Day12Tests
 import qualified Day1Tests
 import qualified Day2Tests
 import qualified Day3Tests
@@ -28,17 +29,18 @@ tests = [
   testGroup "OK computer" OKComputerTests.tests,
   testGroup "computer" ComputerTests.tests,
   testGroup "computer ST" ComputerSTTests.tests,
-  testGroup "day 1" Day1Tests.tests,
-  testGroup "day 2" Day2Tests.tests,
-  testGroup "day 3" Day3Tests.tests,
-  testGroup "day 4" Day4Tests.tests,
-  testGroup "day 5" Day5Tests.tests,
-  testGroup "day 6" Day6Tests.tests,
-  testGroup "day 7" Day7Tests.tests,
-  testGroup "day 8" Day8Tests.tests,
-  testGroup "day 9" Day9Tests.tests,
-  testGroup "day 10" Day10Tests.tests,
-  testGroup "day 11" Day11Tests.tests
+  testGroup "day1" Day1Tests.tests,
+  testGroup "day2" Day2Tests.tests,
+  testGroup "day3" Day3Tests.tests,
+  testGroup "day4" Day4Tests.tests,
+  testGroup "day5" Day5Tests.tests,
+  testGroup "day6" Day6Tests.tests,
+  testGroup "day7" Day7Tests.tests,
+  testGroup "day8" Day8Tests.tests,
+  testGroup "day9" Day9Tests.tests,
+  testGroup "day10" Day10Tests.tests,
+  testGroup "day11" Day11Tests.tests,
+  testGroup "day12" Day12Tests.tests
   ]
 
 main :: IO ()

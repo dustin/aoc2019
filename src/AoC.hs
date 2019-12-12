@@ -13,7 +13,9 @@ module AoC (
   Parser, parseFile, parseLit, parseGrid,
   mdist2, mdist3, mdist4,
   zipt2, zipt3, zipt4,
-  succ', pred'
+  succ', pred',
+  fst3, snd3, thrd,
+  select
   ) where
 
 import           Data.Map.Strict       (Map)
@@ -77,3 +79,17 @@ pred' a
 -- | Parse a grid into a map of (x,y) pairs.
 parseGrid :: (Char -> a) -> String -> Map (Int,Int) a
 parseGrid f = Map.fromList . concatMap (\(y,r) -> map (\(x,c) -> ((x,y),f c)) $ zip [0..] r) . zip [0..] . lines
+
+
+fst3 :: (a,b,c) -> a
+fst3 (a,_,_) = a
+
+snd3 :: (a,b,c) -> b
+snd3 (_,b,_) = b
+
+thrd :: (a,b,c) -> c
+thrd (_,_,c) = c
+
+select :: [a] -> [(a,[a])]
+select []     = []
+select (x:xs) = [(x,xs)] <> (fmap (x:) <$> select xs)
