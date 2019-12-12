@@ -5,7 +5,8 @@
 module Day12 where
 
 import           Control.Parallel.Strategies (parMap, rdeepseq)
-import           Data.List                   (foldl')
+import           Data.List                   (elemIndex, foldl')
+import           Data.Maybe                  (fromJust)
 import           Text.Megaparsec             (endBy)
 import           Text.Megaparsec.Char        (space, string)
 import           Text.Megaparsec.Char.Lexer  (decimal, signed)
@@ -45,8 +46,10 @@ gravitize1 (Moon p@(x1,y1,z1) (vx,vy,vz)) (Moon (x2,y2,z2) _) =
           | a < b = 1
           | otherwise = -1
 
+--  It's OK to test a moon against its own position since that's 0
+-- (previously, I was doing a select to pull out others)
 gravitize :: [Moon] -> [Moon]
-gravitize moons = map (\(m,ms) -> foldl' gravitize1 m ms) $ select moons
+gravitize moons = (\m -> foldl' gravitize1 m moons) <$> moons
 
 move :: [Moon] -> [Moon]
 move = map move1
@@ -61,8 +64,10 @@ energy = sum . map te
   where te (Moon p v) = e p * e v
         e (a,b,c) = abs a + abs b + abs c
 
-posCycles :: [[Moon]] -> [Int]
-posCycles ls = parMap rdeepseq axis [fst3, snd3, thrd]
+-- This was my original implementation.  It was kind of slow, but also
+-- kind of dumb.
+posCycles' :: [[Moon]] -> [Int]
+posCycles' ls = parMap rdeepseq axis [fst3, snd3, thrd]
   where
     poses :: [([Int], [Int], [Int])]
     poses = tr <$> fmap position <$> ls
@@ -76,6 +81,25 @@ posCycles ls = parMap rdeepseq axis [fst3, snd3, thrd]
     -- repeat more frequently.  Two positions in a row is less likely.
     fc :: [[Int]] -> Int
     fc l = snd3 . findCycle id $ zip l $ tail l
+
+type Four = ((Int,Int), (Int,Int), (Int,Int), (Int,Int))
+
+posCycles :: [[Moon]] -> [Int]
+posCycles ls = parMap rdeepseq axis [fst3, snd3, thrd]
+  where
+    maxes :: Moon -> ((Int,Int), (Int,Int), (Int,Int))
+    maxes (Moon (x,y,z) (vx,vy,vz)) = ((x,vx), (y,vy), (z,vz))
+
+    axes :: [Moon] -> ([(Int,Int)], [(Int,Int)], [(Int,Int)])
+    axes moon = (fst3 <$> m, snd3 <$> m, thrd <$> m)
+      where m = maxes <$> moon
+
+    poses :: [([(Int,Int)], [(Int,Int)], [(Int,Int)])]
+    poses = axes <$> ls
+
+    axis = fc . (<$> poses)
+
+    fc (x:xs) = succ . fromJust $ elemIndex x xs
 
 part1 :: IO Int
 part1 = do
