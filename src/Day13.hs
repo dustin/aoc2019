@@ -36,15 +36,17 @@ decOut xs = Game (Map.fromList $ dec <$> chunks) (sc s)
     dec :: [Int] -> TilePos
     dec [a,b,c] = ((a,b), toEnum c)
 
+tileChar :: Tile -> Char
+tileChar EmptySpace = ' '
+tileChar Wall       = '|'
+tileChar Block      = '#'
+tileChar Horizontal = '-'
+tileChar Ball       = 'o'
+
 drawGame :: Game -> String
 drawGame (Game m s) = "Score: " <> show s <> "\n" <> drawString m cf
   where
-    cf pos = l (Map.findWithDefault EmptySpace pos m)
-    l EmptySpace = ' '
-    l Wall       = '|'
-    l Block      = '#'
-    l Horizontal = '-'
-    l Ball       = 'o'
+    cf pos = tileChar (Map.findWithDefault EmptySpace pos m)
 
 part1 :: IO Int
 part1 = do

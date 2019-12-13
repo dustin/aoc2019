@@ -38,6 +38,7 @@ dependencies:
 - ghc-prim
 - doctest
 - vector-split
+- ansi-terminal
 - optics
 - linear
 - astar
