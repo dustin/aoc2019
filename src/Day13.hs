@@ -6,11 +6,17 @@
 module Day13 where
 
 import           Control.Lens
-import           Data.Either     (fromRight)
-import           Data.List       (partition)
-import           Data.List.Extra (chunksOf)
-import           Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
+import           Data.Either         (fromRight)
+import           Data.List           (partition)
+import           Data.List.Extra     (chunksOf)
+import           Data.Map.Strict     (Map)
+import qualified Data.Map.Strict     as Map
+
+-- For displaying
+import           Control.Concurrent  (threadDelay)
+import           Control.Exception   (bracket_)
+import           System.Console.ANSI
+import           System.IO           (hFlush, stdout)
 
 import           ComputerST
 import           Vis
@@ -39,7 +45,7 @@ decOut xs = Game (Map.fromList $ dec <$> chunks) (sc s)
 tileChar :: Tile -> Char
 tileChar EmptySpace = ' '
 tileChar Wall       = '|'
-tileChar Block      = '#'
+tileChar Block      = '█'
 tileChar Horizontal = '-'
 tileChar Ball       = 'o'
 
@@ -82,3 +88,34 @@ playGame progIn = start
 
 part2 :: IO [Game]
 part2 = playGame <$> getInput
+
+part2Animated :: IO ()
+part2Animated =do
+  rgs <- part2
+  let (g:gs) = reverse rgs
+
+  clearScreen
+  setCursorPosition 0 0
+  putStrLn $ drawGame g
+
+  let diffs = zipWith (\(Game m1 _) (Game m2 s) -> Game (Map.differenceWith (\a b -> if a == b then Nothing else Just b) m1 m2) s) (g:gs) gs
+
+  bracket_ hideCursor showCursor (mapM_ drawUp diffs)
+
+  clearScreen
+  setCursorPosition 0 0
+  putStrLn $ drawGame (head rgs)
+
+  where
+    drawUp :: Game -> IO ()
+    drawUp (Game m s) = do
+      mapM_ drawUp1 (Map.toList m)
+      drawScore s
+      hFlush stdout
+      threadDelay 10000
+
+    drawUp1 :: TilePos -> IO ()
+    drawUp1 ((x,y), o) = setCursorPosition (y+1) x >> putStr [tileChar o]
+
+    drawScore 0 = pure ()
+    drawScore s = setCursorPosition 0 7 >> print s
