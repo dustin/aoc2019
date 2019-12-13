@@ -38,6 +38,9 @@ dependencies:
 - ghc-prim
 - doctest
 - vector-split
+- optics
+- linear
+- astar
 
 library:
   source-dirs: src
