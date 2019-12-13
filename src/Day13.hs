@@ -74,17 +74,7 @@ playGame progIn = start
 
     prog = progIn & ix 0 .~ 2
 
-    s g = case compare (ballX g) (padPos g) of
-          LT -> -1
-          EQ -> 0
-          GT -> 1
-
-    ballX :: Game -> Int
-    ballX = f Ball
-    padPos :: Game -> Int
-    padPos = f Horizontal
-
-    f :: Tile -> Game -> Int
+    s g = (f Ball g) - (f Horizontal g)
     f t (Game m _) = foldr (\((x,_),t') o -> if t == t' then x else o) 0 $ Map.toList m
 
 
