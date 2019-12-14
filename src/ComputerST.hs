@@ -34,7 +34,7 @@ data Termination = NormalTermination
                  | Bugger String deriving (Show, Eq)
 
 pageSize :: Int
-pageSize = 256
+pageSize = 8192
 
 pageFor :: Int -> Int
 pageFor = (pageSize *) . (`div` pageSize)
@@ -198,7 +198,7 @@ executeIn = executeWithinIns 100000
 resume :: Paused -> [Int] -> Either Termination FinalState
 resume p ins = runST $ do
   vms <- fromPaused ins p
-  either (pure . Left) (pure . Right) =<< executeWithinST 100000 vms
+  either (pure . Left) (pure . Right) =<< executeWithinST 1000000 vms
 
 {- Immutable Vector version
 execute' :: Int -> Instructions -> Instructions

@@ -2,12 +2,15 @@
 
 module Vis where
 
-import           Codec.Picture   (PixelRGB8 (..), generateImage, writePng)
-import           Data.Coerce     (coerce)
-import           Data.List       (intercalate)
-import           Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
-import           Data.Semigroup  (Max (..), Min (..))
+import           Codec.Picture       (PixelRGB8 (..), generateImage, writePng)
+import           Control.Exception   (bracket_)
+import           Data.Coerce         (coerce)
+import           Data.List           (intercalate)
+import           Data.Map.Strict     (Map)
+import qualified Data.Map.Strict     as Map
+import           Data.Semigroup      (Max (..), Min (..))
+import           System.Console.ANSI
+
 
 white :: PixelRGB8
 white = PixelRGB8 255 255 255
@@ -88,3 +91,6 @@ drawString a cf = intercalate "\n" (map (\y -> map (\x -> fromPF x y) [0.. width
   where
     DrawSpec{..} = mkDrawSpec a
     fromPF x y = cf (transX x, transY y)
+
+withHiddenCursor :: IO a -> IO a
+withHiddenCursor =  bracket_ hideCursor showCursor
