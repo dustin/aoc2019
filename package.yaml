@@ -42,6 +42,8 @@ dependencies:
 - optics
 - linear
 - astar
+- mtl
+- unordered-containers
 
 library:
   source-dirs: src

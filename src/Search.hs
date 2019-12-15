@@ -58,6 +58,7 @@ dijkstra' neighbrf start done = go (Q.singleton (0,start)) (Map.singleton start 
         l' = Map.union (Map.fromList $ map (\(_,p') -> (p',pt)) moves) l
         psd = Q.fromList $ fmap (\(c,x) -> (d+c,x)) moves
 
+
 -- | Using maps computed by 'dijkstra'', find the cost and path from the
 -- start to a destination.
 resolveDijkstra :: Ord v => Map v Int -> Map v v -> v -> v -> Maybe (Int,[v])
