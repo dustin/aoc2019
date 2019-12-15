@@ -54,11 +54,16 @@ instance Integral a => Bounded2D (Map (a, a) b) where
   bounds2d = listBounds . Map.keys
 
 data DrawSpec = DrawSpec {
-  width  :: Int,
-  height :: Int,
-  transX :: Int -> Int,
-  transY :: Int -> Int
+  width     :: Int,
+  height    :: Int,
+  transX    :: Int -> Int,
+  transY    :: Int -> Int,
+  invTransX :: Int -> Int,
+  invTransY :: Int -> Int
   }
+
+instance Show DrawSpec where
+  show DrawSpec{..} = "DrawSpec{width=" <> show width <> ", height=" <> show height <> "}"
 
 mkDrawSpec :: Bounded2D a => a -> DrawSpec
 mkDrawSpec a = DrawSpec{..}
@@ -70,6 +75,9 @@ mkDrawSpec a = DrawSpec{..}
     -- img x -> object x
     transX = (mnx +)
     transY = (mny +)
+
+    invTransX = (subtract mnx)
+    invTransY = (subtract mny)
 
 draw :: Bounded2D a => FilePath -> a -> PixelFun -> IO ()
 draw fn o pf = writePng fn (generateImage fromPF width height)

@@ -2,7 +2,7 @@
 
 module Main where
 
-import           Day13
+import           Day15
 
 main :: IO ()
-main = hack
+main = animate1

@@ -5,11 +5,15 @@
 
 module Day15 where
 
+import           Control.Concurrent  (threadDelay)
 import           Control.Monad.State
 import           Data.Graph.AStar
 import qualified Data.HashSet        as HS
 import           Data.Map.Strict     (Map)
 import qualified Data.Map.Strict     as Map
+import           Data.Maybe          (fromMaybe)
+import           System.Console.ANSI
+import           System.IO           (hFlush, stdout)
 
 import           ComputerST
 import           Vis
@@ -68,7 +72,7 @@ neighbors point = do
       where mf b@BotState{..} = b{stateAt=Map.union stateAt (Map.fromList nps),
                                   world=Map.union world (Map.fromList chs)}
     ch :: [Int] -> Char
-    ch [0] = '#'
+    ch [0] = '█'
     ch [1] = ' '
     ch [2] = 'O'
     ch x   = error ("Unexpected input: " <> show x)
@@ -120,6 +124,26 @@ getInput = readInstructions "input/day15"
 
 part1 :: IO (Maybe Int)
 part1 = fmap length . findPath <$> getInput
+
+animate1 :: IO ()
+animate1 = do
+  prog <- getInput
+  let wholeWorld = world . snd . runSearch prog $ (const $ pure False)
+      drawSpec@DrawSpec{..} = mkDrawSpec wholeWorld
+      path = fromMaybe [] (findPath prog)
+
+  clearScreen
+  setCursorPosition 0 0
+  putStrLn $ displayMap wholeWorld
+  withHiddenCursor $ mapM_ (breadcrumbs drawSpec) path
+  setCursorPosition height 0
+
+  where
+    breadcrumbs DrawSpec{..} (x,y) = do
+      setCursorPosition (invTransY y) (invTransX x)
+      putStr "."
+      hFlush stdout
+      threadDelay 100000
 
 part2 :: IO Int
 part2 = flood <$> getInput
