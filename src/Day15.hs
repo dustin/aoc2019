@@ -150,9 +150,8 @@ animate1 = do
 part2 :: IO Int
 part2 = fst . flood <$> getInput
 
-animate2 :: IO ()
-animate2 = do
-  prog <- getInput
+animate2 :: Instructions -> IO ()
+animate2 prog = do
   let wholeWorld = world . snd . runSearch prog $ (const $ pure False)
       drawSpec@DrawSpec{..} = mkDrawSpec wholeWorld
       (_, paths) = flood prog

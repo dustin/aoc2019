@@ -5,4 +5,4 @@ module Main where
 import           Day15
 
 main :: IO ()
-main = animate2
+main = animate2 =<< getInput
