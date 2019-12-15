@@ -54,14 +54,14 @@ fwd N (x,y) = (x,y-1)
 fwd W (x,y) = (x-1,y)
 fwd E (x,y) = (x+1,y)
 
-around :: (Int,Int) -> [(Dir,(Int,Int))]
-around p = [(d,fwd d p) | d <- [minBound..]]
+around :: (Int,Int) -> [(Int,Int)]
+around p = [fwd d p | d <- [minBound..]]
 
 neighbors :: (Int,Int) -> Excursion [(Int,Int)]
 neighbors point = do
   BotState{..} <- get
   let p = stateAt Map.! point
-      nps = map (\(d,np) -> (np, runOne p [unDir d])) $ around point
+      nps = map (\(d,np) -> (np, runOne p [unDir d])) $ zip [minBound..] (around point)
       chs = map (\(np, Paused{..}) -> (np, ch pausedOuts)) nps
       oks = filter (\(_,x) -> x `elem` [' ', 'O']) chs
   upd nps chs
@@ -115,7 +115,7 @@ flood prog = go 0 startPs wm [startPs]
 
     dd = HS.toList . HS.fromList
 
-    ns points m = dd $ filter (\p -> Map.findWithDefault '#' p m == ' ') $ concatMap (fmap snd . around) points
+    ns points m = dd $ filter (\p -> Map.findWithDefault '#' p m == ' ') $ concatMap around points
 
     (_, botState) = runSearch prog (const $ pure False)
     wm = world botState
