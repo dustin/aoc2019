@@ -103,12 +103,14 @@ findPath prog = fst $ runSearch prog goalf
       pure (Map.lookup point m == Just 'O')
 
 flood :: Instructions -> (Int, [[(Int,Int)]])
-flood prog = go 0 (ns [start] wm) wm []
+flood prog = go 0 startPs wm [startPs]
   where
+    startPs = ns [start] wm
     go n points m vs
       | (null . filter (== ' ') . Map.elems) m = (n, vs)
-      | otherwise = go (n+1) (ns points up) up (ns points m:vs)
+      | otherwise = go (n+1) np up (np:vs)
       where
+        np = ns points up
         up = Map.union (Map.fromList [(p,'O') | p <- points]) m
 
     dd = HS.toList . HS.fromList
