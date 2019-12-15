@@ -102,12 +102,12 @@ findPath prog = fst $ runSearch prog goalf
       m <- gets world
       pure (Map.lookup point m == Just 'O')
 
-flood :: Instructions -> Int
-flood prog = go 0 (ns [start] wm) wm
+flood :: Instructions -> (Int, [[(Int,Int)]])
+flood prog = go 0 (ns [start] wm) wm []
   where
-    go n points m
-      | (null . filter (== ' ') . Map.elems) m = n
-      | otherwise = go (n+1) (ns points up) up
+    go n points m vs
+      | (null . filter (== ' ') . Map.elems) m = (n, vs)
+      | otherwise = go (n+1) (ns points up) up (ns points m:vs)
       where
         up = Map.union (Map.fromList [(p,'O') | p <- points]) m
 
@@ -146,4 +146,29 @@ animate1 = do
       threadDelay 100000
 
 part2 :: IO Int
-part2 = flood <$> getInput
+part2 = fst . flood <$> getInput
+
+animate2 :: IO ()
+animate2 = do
+  prog <- getInput
+  let wholeWorld = world . snd . runSearch prog $ (const $ pure False)
+      drawSpec@DrawSpec{..} = mkDrawSpec wholeWorld
+      (_, paths) = flood prog
+
+  clearScreen
+  setCursorPosition 0 0
+  putStrLn $ displayMap wholeWorld
+  withHiddenCursor $ mapM_ (breadcrumbs drawSpec) (reverse paths)
+  setCursorPosition height 0
+  setSGR [Reset]
+
+  where
+    breadcrumbs DrawSpec{..} ps = do
+      mapM_ showOne ps
+      hFlush stdout
+      threadDelay 100000
+
+      where showOne (x,y) = do
+              setCursorPosition (invTransY y) (invTransX x)
+              setSGR [SetColor Foreground Vivid Blue]
+              putStr "O"
