@@ -1,4 +1,9 @@
+*.eventlog
+*.prof
 *~
 .stack-work/
+/*.html
+/*.png
+/TAGS
 /stack.yaml.lock
 aoc.cabal
