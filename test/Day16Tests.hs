@@ -17,7 +17,7 @@ testPart2 :: Assertion
 testPart2 = assertEqual "" 36265589 =<< part2
 
 testPart2ST :: Assertion
-testPart2ST = assertEqual "" 36265589 =<< (doPart2 <$> getInput)
+testPart2ST = assertEqual "" 36265589 =<< doPart2ST <$> getInput
 
 propFFTAdd :: Int -> Property
 propFFTAdd x = fftNaive v === fft v
@@ -37,6 +37,6 @@ tests = [
   -- , testCase "Part 1" testPart1
   -- testCase "Part 2 small" testPart2Small
   -- testCase "Part 2 small ST" testPart2SmallST
-  -- , testCase "Part 2" testPart2
-  --, testCase "Part 2 ST" testPart2ST
+  -- testCase "Part 2" testPart2
+  testCase "Part 2" testPart2ST
   ]

@@ -2,7 +2,7 @@
 
 module Main where
 
-import           Day15
+import           Day16
 
 main :: IO ()
-main = animate2 =<< getInput
+main = print =<< doPart2ST <$> getInput
