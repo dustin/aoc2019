@@ -102,3 +102,8 @@ drawString a cf = intercalate "\n" (map (\y -> map (\x -> fromPF x y) [0.. width
 
 withHiddenCursor :: IO a -> IO a
 withHiddenCursor =  bracket_ hideCursor showCursor
+
+drawingBracket :: IO a -> IO a
+drawingBracket = bracket_ begin end
+  where begin = saveCursor
+        end = setSGR [Reset] >> restoreCursor

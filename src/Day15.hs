@@ -83,27 +83,27 @@ runOne p@Paused{..} ins =
     Left (NoInput p') -> p'
     x                 -> error ("Unexpected termination: " <> show x)
 
-runSearch :: Instructions -> ((Int,Int) -> Excursion Bool) -> (Maybe [(Int,Int)], BotState)
-runSearch prog goalf = runState (go (execute prog)) (BotState (Map.singleton (0,0) ' ') mempty)
+runSearch :: Instructions -> ((Int,Int) -> Excursion Bool) -> (Int,Int) -> (Maybe [(Int,Int)], BotState)
+runSearch prog goalf st = runState (go (execute prog)) (BotState (Map.singleton st ' ') mempty)
   where
     go :: Either Termination FinalState -> Excursion (Maybe [(Int,Int)])
     go (Right _)            = pure Nothing
 
     go (Left (NoInput p)) = do
-      modify (\b@BotState{..} -> b{stateAt=Map.singleton (0,0) p})
-      aStarM nf (const . const $ pure (1::Int)) (const $ pure 0) goalf (pure (0,0))
+      modify (\b@BotState{..} -> b{stateAt=Map.singleton st p})
+      aStarM nf (const . const $ pure (1::Int)) (const $ pure 0) goalf (pure st)
 
     nf point = HS.fromList <$> neighbors point
 
 findPath :: Instructions -> Maybe [(Int,Int)]
-findPath prog = fst $ runSearch prog goalf
+findPath prog = fst $ runSearch prog goalf (0,0)
   where
     goalf point = do
       m <- gets world
       pure (Map.lookup point m == Just 'O')
 
-flood :: Instructions -> (Int, [[(Int,Int)]])
-flood prog = go 0 startPs wm [startPs]
+flood :: World -> (Int,Int) -> (Int, [[(Int,Int)]])
+flood wm start = go 0 startPs wm [startPs]
   where
     startPs = ns [start] wm
     go n points m vs
@@ -117,28 +117,36 @@ flood prog = go 0 startPs wm [startPs]
 
     ns points m = dd $ filter (\p -> Map.findWithDefault '#' p m == ' ') $ concatMap around points
 
-    (_, botState) = runSearch prog (const $ pure False)
-    wm = world botState
-    (start,_) = head . filter (\(_,c) -> c == 'O') $ Map.toList wm
-
 getInput :: IO Instructions
 getInput = readInstructions "input/day15"
 
 part1 :: IO (Maybe Int)
 part1 = fmap length . findPath <$> getInput
 
-animate1 :: IO ()
-animate1 = do
+part2 :: IO Int
+part2 = do
   prog <- getInput
-  let wholeWorld = world . snd . runSearch prog $ (const $ pure False)
-      drawSpec@DrawSpec{..} = mkDrawSpec wholeWorld
-      path = fromMaybe [] (findPath prog)
+  let wm = world . snd . runSearch prog (const $ pure False) $ (0,0)
+      (o,_) = head . filter (\(_,c) -> c == 'O') $ Map.toList wm
 
+  pure . fst $ flood wm o
+
+drawInitial :: Instructions -> IO (World, DrawSpec)
+drawInitial prog = do
+  let wholeWorld = world . snd . runSearch prog (const $ pure False) $ (0,0)
+      drawSpec@DrawSpec{..} = mkDrawSpec wholeWorld
   clearScreen
   setCursorPosition 0 0
   putStrLn $ displayMap wholeWorld
-  withHiddenCursor $ mapM_ (breadcrumbs drawSpec) path
-  setCursorPosition height 0
+  pure (wholeWorld, drawSpec)
+
+animate1 :: IO ()
+animate1 = do
+  prog <- getInput
+  (_, drawSpec) <- drawInitial prog
+  let path = fromMaybe [] (findPath prog)
+
+  drawingBracket $ withHiddenCursor $ mapM_ (breadcrumbs drawSpec) path
 
   where
     breadcrumbs DrawSpec{..} (x,y) = do
@@ -147,21 +155,13 @@ animate1 = do
       hFlush stdout
       threadDelay 100000
 
-part2 :: IO Int
-part2 = fst . flood <$> getInput
-
 animate2 :: Instructions -> IO ()
 animate2 prog = do
-  let wholeWorld = world . snd . runSearch prog $ (const $ pure False)
-      drawSpec@DrawSpec{..} = mkDrawSpec wholeWorld
-      (_, paths) = flood prog
+  (wm, drawSpec) <- drawInitial prog
+  let (start,_) = head . filter (\(_,c) -> c == 'O') $ Map.toList wm
+      (_, paths) = flood wm start
 
-  clearScreen
-  setCursorPosition 0 0
-  putStrLn $ displayMap wholeWorld
-  withHiddenCursor $ mapM_ (breadcrumbs drawSpec) (reverse paths)
-  setCursorPosition height 0
-  setSGR [Reset]
+  drawingBracket $ withHiddenCursor $ mapM_ (breadcrumbs drawSpec) (reverse paths)
 
   where
     breadcrumbs DrawSpec{..} ps = do
