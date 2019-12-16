@@ -102,8 +102,8 @@ findPath prog = fst $ runSearch prog goalf (0,0)
       m <- gets world
       pure (Map.lookup point m == Just 'O')
 
-flood :: World -> (Int,Int) -> (Int, [[(Int,Int)]])
-flood wm start = go 0 startPs wm [startPs]
+flood :: (Int,Int) -> World -> (Int, [[(Int,Int)]])
+flood start wm = go 0 startPs wm [startPs]
   where
     startPs = ns [start] wm
     go n points m vs
@@ -129,7 +129,7 @@ part2 = do
   let wm = world . snd . runSearch prog (const $ pure False) $ (0,0)
       (o,_) = head . filter (\(_,c) -> c == 'O') $ Map.toList wm
 
-  pure . fst $ flood wm o
+  pure . fst $ flood o wm
 
 drawInitial :: Instructions -> IO (World, DrawSpec)
 drawInitial prog = do
@@ -159,7 +159,7 @@ animate2 :: Instructions -> IO ()
 animate2 prog = do
   (wm, drawSpec) <- drawInitial prog
   let (start,_) = head . filter (\(_,c) -> c == 'O') $ Map.toList wm
-      (_, paths) = flood wm start
+      (_, paths) = flood start wm
 
   drawingBracket $ withHiddenCursor $ mapM_ (breadcrumbs drawSpec) (reverse paths)
 

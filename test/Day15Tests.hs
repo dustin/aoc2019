@@ -8,6 +8,7 @@ import           Test.Tasty.HUnit
 
 import           Day15
 
+-- Oxygen is at (18,-20)
 testPart1 :: Assertion
 testPart1 = assertEqual "" (Just 330) =<< part1
 
