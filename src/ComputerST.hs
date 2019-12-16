@@ -52,7 +52,7 @@ data VMState s = VMState {
 fromPaused :: [Int] -> Paused -> ST s (VMState s)
 fromPaused i Paused{..} = do
   thawed <- mapM V.thaw $ fmap snd pausedIns
-  pure $ VMState pausedPC (Map.fromList $ zip (fmap fst pausedIns) thawed) i pausedOuts pausedRel
+  pure $ VMState pausedPC (Map.fromList $ zip (fmap fst pausedIns) thawed) i [] pausedRel
 
 data FinalState = FinalState {
   ram     :: !Instructions,

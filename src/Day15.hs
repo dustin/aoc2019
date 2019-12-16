@@ -79,7 +79,7 @@ neighbors point = do
 
 runOne :: Paused -> [Int] -> Paused
 runOne p@Paused{..} ins =
-  case resume p{pausedOuts=[]} ins of
+  case resume p ins of
     Left (NoInput p') -> p'
     x                 -> error ("Unexpected termination: " <> show x)
 

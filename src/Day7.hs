@@ -29,9 +29,9 @@ findFeedback prog = maximum . fmap maximum . sequenceA . parMap rseq run $ permu
     next (('E', Right x):_) = outputs x
     next (x:xs)             = forward x xs
     next []                 = error "empty next"
-    forward (_, Right fs) ((p2, Left (NoInput p)):xs) = next $ (p2, resume p{pausedOuts=[]} (outputs fs)) : xs
-    forward (p1, Left (NoInput pa1)) ((p2, Left (NoInput pa2)):xs) =
-      next $ (p2, resume pa2{pausedOuts=[]} (pausedOuts pa1)) : xs <> [(p1, Left (NoInput pa1{pausedOuts=[]}))]
+    forward (_, Right fs) ((p2, Left (NoInput p)):xs) = next $ (p2, resume p (outputs fs)) : xs
+    forward (p1, Left (NoInput pa1@Paused{pausedOuts})) ((p2, Left (NoInput pa2)):xs) =
+      next $ (p2, resume pa2 pausedOuts) : xs <> [(p1, Left (NoInput pa1))]
     forward x xs = error ("Unhandled forward: " <> show x <> " : " <> show xs)
 
 part1 :: IO (Either (Termination Int) Int)

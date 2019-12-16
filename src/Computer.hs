@@ -43,7 +43,7 @@ data VMState a = VMState {
   }
 
 fromPaused :: [a] -> Paused a -> VMState a
-fromPaused i Paused{..} = VMState pausedPC pausedIns i pausedOuts pausedRel
+fromPaused i Paused{..} = VMState pausedPC pausedIns i [] pausedRel
 
 data FinalState a = FinalState {
   ram     :: !(Instructions a),

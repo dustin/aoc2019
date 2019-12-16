@@ -25,7 +25,7 @@ runOne start prog = go (0,0) U mempty (executeIn [start] prog)
           m' = Map.insert pos c m
           dir' = turn t dir
           pos' = fwd dir' pos in
-        go pos' dir' m' (resume p{pausedOuts=[]} [Map.findWithDefault 0 pos' m])
+        go pos' dir' m' (resume p [Map.findWithDefault 0 pos' m])
 
     turn 0 = pred'
     turn _ = succ'
