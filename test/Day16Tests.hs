@@ -33,10 +33,10 @@ testPart2SmallST = assertEqual "" 84462026 $ doPart2ST (parseNum "03036732577212
 
 tests :: [TestTree]
 tests = [
-  -- testProperty "fft add vs. naive" propFFTAdd
-  -- , testCase "Part 1" testPart1
+  testProperty "fft add vs. naive" propFFTAdd
+  , testCase "Part 1" testPart1
   -- testCase "Part 2 small" testPart2Small
   -- testCase "Part 2 small ST" testPart2SmallST
   -- testCase "Part 2" testPart2
-  testCase "Part 2" testPart2ST
+  , testCase "Part 2" testPart2ST
   ]
