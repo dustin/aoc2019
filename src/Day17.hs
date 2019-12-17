@@ -9,7 +9,7 @@ import           Control.Lens
 import           Control.Monad   (guard, when)
 import           Data.Char       (chr, ord)
 import           Data.Either     (fromRight, isLeft)
-import           Data.List       (group, inits, intercalate, isInfixOf)
+import           Data.List       (inits, intercalate, isInfixOf)
 import           Data.List.Extra (replace)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
@@ -45,19 +45,6 @@ intersections m = [(x,y) | x <- [mnx..mxx], y <- [mny..mxy], is (x,y)]
   where
     ((mnx,mny),(mxx,mxy)) = bounds2d m
     is c = Map.lookup c m == Just '#' && ((length $ neighbors m c) == 4)
-
-corners :: World -> [Point]
-corners m = [(x,y) | x <- [mnx..mxx], y <- [mny..mxy], is (x,y)]
-  where
-    ((mnx,mny),(mxx,mxy)) = bounds2d m
-    isPath c = Map.lookup c m == Just '#'
-    is c = isPath c && (alone || angle)
-      where
-        ns = neighbors m c
-        alone = length ns == 1
-        angle = length ns == 2 && (notSame $ fst <$> ns) && (notSame $ snd <$> ns)
-        notSame :: Eq a => [a] -> Bool
-        notSame = not . null . tail . group
 
 data Dir = N | E | S | W deriving (Show, Bounded, Enum, Eq)
 
@@ -118,6 +105,7 @@ compress moves = head $ do
   guard $ (length . moveStr $ ms''') < 20
 
   pure (a,b,c,ms''')
+
   where
     nn = not . null
 
