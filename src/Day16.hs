@@ -19,20 +19,17 @@ getInput = parseNum . filter isDigit <$> readFile "input/day16"
 parseNum :: String -> [Int]
 parseNum = fmap digitToInt
 
-basePat :: [Int]
-basePat = [0, 1, 0, -1]
-
-repeatN :: Int -> [Int] -> [Int]
-repeatN n = drop 1 . cycle . concatMap (replicate n)
-
 fft :: [Int] -> [Int]
-fft xs = map (\p -> fftAdd (drop (p-1) xs) (rn p basePat)) $ take (length xs) [1..]
-  where fftAdd digs pat = (`mod` 10) . abs . sum . zipWith (*) digs $ (cycle pat)
-        rn n = dropWhile (== 0) . cycle . concatMap (replicate n)
+fft xs = map (\p -> fftAdd (drop (p-1) xs) (rn p patFuns)) $ take (length xs) [1..]
+  where fftAdd digs pat = (`mod` 10) . abs . sum . zipWith ($) (cycle pat) $ digs
+        rn n = drop n . cycle . concatMap (replicate n)
+        patFuns = [const 0, id, const 0, negate]
 
 fftNaive :: [Int] -> [Int]
-fftNaive xs = map (\p -> fftAddNaive xs (repeatN p basePat)) $ take (length xs) [1..]
+fftNaive xs = map (\p -> fftAddNaive xs (rn p basePat)) $ take (length xs) [1..]
   where fftAddNaive digs pat = (`mod` 10) . abs . sum . zipWith (*) digs $ (cycle pat)
+        basePat = [0, 1, 0, -1]
+        rn n = drop 1 . cycle . concatMap (replicate n)
 
 listNum :: Num a => [a] -> a
 listNum = foldl' (\o x -> x + o * 10) 0
