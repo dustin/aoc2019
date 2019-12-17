@@ -26,10 +26,7 @@ getInput :: IO Instructions
 getInput = readInstructions "input/day17"
 
 getMap :: Instructions -> World
-getMap prog =
-  let e = outputs <$> execute prog
-      ls = fmap (zip [0..]) . lines . fmap chr . fromRight [] $ e
-  in Map.fromList . mconcat . zipWith (\ls' y -> map (\(x,c) -> ((x,y),c)) ls') ls $ [0..]
+getMap prog = parseGrid id . fmap chr . fromRight [] $ outputs <$> execute prog
 
 displayMap :: World -> String
 displayMap m = drawString m (\p -> Map.findWithDefault ' ' p m)
