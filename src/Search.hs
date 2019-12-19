@@ -65,12 +65,12 @@ bfsOn rep next start = loop Set.empty (Queue.singleton start)
 dijkstra' :: Ord v => (v -> [(Int,v)]) -- ^ Provide a list of all neighbors of v with their associated costs.
   -> v -- ^ The starting point.
   -> (v -> Bool) -- ^ Predicate allowing early termination of search (if True).
-  -> (Map v Int, Map v v) -- ^ (cost from origin to v, links from points to points)
+  -> (v, Map v Int, Map v v) -- ^ (cost from origin to v, links from points to points)
 dijkstra' neighbrf start done = go (Q.singleton (0,start)) (Map.singleton start 0) mempty mempty
   where
     go q m l seen
-      | Q.null q = (m,l)
-      | done pt = (m',l)
+      | Q.null q = (pt, m,l)
+      | done pt = (pt, m',l)
       | Set.member pt seen = go odo m l seen
       | otherwise = go (odo <> psd) m' l' (Set.insert pt seen)
 
@@ -102,7 +102,7 @@ dijkstra :: Ord v => (v -> [(Int,v)]) -- ^ Provide a list of all neighbors of v 
          -> v -- ^ The destination point.
          -> Maybe (Int,[v])  -- ^ The cost to the destination, and the path to get there.
 dijkstra neighbrf start end = resolve (dijkstra' neighbrf start (== end))
-  where resolve (m,l) = resolveDijkstra m l start end
+  where resolve (_, m,l) = resolveDijkstra m l start end
 
 -- | 'binSearch' performs a binary search to find the boundary
 -- function where a function returns its highest 'LT' value.

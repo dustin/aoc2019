@@ -10,11 +10,15 @@ import           Control.Monad.State
 import           Control.Parallel.Strategies (parMap, rdeepseq)
 import           Data.Char                   (isAlpha, isLower, isUpper,
                                               toLower, toUpper)
+import           Data.Graph.AStar            (aStar)
+import qualified Data.HashSet                as HS
 import           Data.List.Extra             (minimumOn)
 import           Data.Map.Strict             (Map)
 import qualified Data.Map.Strict             as Map
+import           Data.Maybe                  (fromJust)
 import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
+import           Debug.Trace
 
 import           AoC
 import           Search
@@ -97,6 +101,38 @@ breakfast m = evalState (go (Set.fromList . Map.elems $ keys m) mempty (Set.from
             where
               descend (op, (p, _, c, path)) = go (Set.delete c need) (Set.insert c h) adjps [path]
                 where adjps = Set.insert p $ Set.delete op $ ps
+
+type DState = (Point, Set Char, Set Char)
+
+dijk :: World -> Maybe (Int, [Point])
+dijk m = res $ dijkstra' nf start isDone
+  where
+    start = (entrance m, (Set.fromList . Map.elems $ keys m), mempty)
+    km = k2k m
+    isDone :: DState -> Bool
+    isDone (_,x,_) = null x
+
+    res :: (DState, Map DState Int, Map DState DState) -> Maybe (Int, [Point])
+    res (e, m,l) = (fmap.fmap) (\(p, _, _) -> p) <$> resolveDijkstra m l start e
+
+    nf :: DState -> [(Int, DState)]
+    nf (p, w, h) = map (\(np,_,c,ps) -> (1 + length ps, (p, Set.delete c w, Set.insert c h))) $ possible p h km
+
+type HSDState = (Point, HS.HashSet Char, HS.HashSet Char, Int)
+
+ast :: World -> Maybe Int
+ast m = sum . fmap (\(_,_,_,x) -> x) <$> aStar nf dist (const 0) isDone start
+  where
+    start = (entrance m, (HS.fromList . Map.elems $ keys m), mempty, 0)
+    km = k2k m
+    kd = Map.map (\m -> Map.fromList $ map (\(p, _, _, ps) -> (p,filter (/= p) ps)) $ Map.elems m) km
+    isDone (_,x,_,_) = null x
+    dist (a,_,_,_) (b,_,_,_) = succ . length $ kd Map.! a Map.! b
+    nf (p, w, h, _) = HS.fromList $ map (\(np,_,c,ps) ->
+                                           (np, HS.delete c w, HS.insert c h, length ps)) $
+                      possible p (hsh h) km
+    hsh = Set.fromList . HS.toList
+
 {-
 withSort :: World -> [[Point]]
 withSort m = undefined
@@ -162,6 +198,9 @@ k2k = k2kOn isLower
 
 do1 :: FilePath -> IO Int
 do1 fp = sum . fmap length . breakfast <$> getInput fp
+
+do1ast :: FilePath -> IO Int
+do1ast fp = fromJust . ast <$> getInput fp
 
 do2 :: FilePath -> IO Int
 do2 fp = sum . fmap length . breakfast <$> getInput fp
