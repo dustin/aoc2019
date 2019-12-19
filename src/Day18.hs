@@ -78,23 +78,26 @@ cached p ks f = do
     Nothing -> f p ks >>= \v -> modify (Map.insert (p,ks) v) >> pure v
     Just v  -> pure v
 
-breakfastCached :: World -> [[Point]]
-breakfastCached m = evalState (go (Set.fromList . Map.elems $ keys m) mempty (entrance m) []) mempty
+
+breakfast :: World -> [[Point]]
+breakfast m = evalState (go (Set.fromList . Map.elems $ keys m) mempty (entrances m) []) mempty
   where
     km = k2k m
     pathlen = length . concat
-    go :: Set Char -> Set Char -> (Int,Int) -> [[Point]] -> State BCache [[Point]]
-    go need have pos ans
+    go :: Set Char -> Set Char -> [(Int,Int)] -> [[Point]] -> State BCache [[Point]]
+    go need have (pos:rest) ans
       | null need = pure ans
+      | nomoves = go need have (rest<>[pos]) ans
       | otherwise = cached pos have fetch >>= pure . (<> ans)
 
       where
+        nomoves = null $ possible pos have km
         fetch :: (Int,Int) -> Set Char -> State BCache [[Point]]
         fetch p h = do
-          xs <- mapM (descend need h) (possible p h km)
+          xs <- mapM (descend need h rest) (possible p h km)
           pure $ minimumOn pathlen xs
 
-    descend need have (p, _, c, path) = go (Set.delete c need) (Set.insert c have) p [path]
+    descend need have rest (p, _, c, path) = go (Set.delete c need) (Set.insert c have) (p:rest) [path]
 
 {-
 withSort :: World -> [[Point]]
@@ -133,7 +136,7 @@ showk2k = mapM_ showk . Map.toList
                                                      " len: ", show (length path)]
 
 k2kOn :: (Char -> Bool) -> World -> Map Point (Map Char Dest)
-k2kOn pr m = Map.fromList . fmap extractValue . parMap rdeepseq oneKey . (entrance m:) . Map.keys . keys $ m
+k2kOn pr m = Map.fromList . fmap extractValue . parMap rdeepseq oneKey . (entrances m<>) . Map.keys . keys $ m
   where
     oneKey kp = (kp, bfsOn (\(a,_,_,_) -> a) nf (kp, mempty, m Map.! kp, []))
 
@@ -160,7 +163,10 @@ k2k :: World -> Map Point (Map Char Dest)
 k2k = k2kOn isLower
 
 do1 :: FilePath -> IO Int
-do1 fp = sum . fmap length . breakfastCached <$> getInput fp
+do1 fp = sum . fmap length . breakfast <$> getInput fp
+
+do2 :: FilePath -> IO Int
+do2 fp = sum . fmap length . breakfast <$> getInput fp
 
 p2Input :: FilePath -> IO World
 p2Input fp = do
@@ -175,4 +181,4 @@ part1 :: IO Int
 part1 = do1 "input/day18"
 
 part2 :: IO Int
-part2 = pure 0
+part2 = sum . fmap length . breakfast <$> p2Input "input/day18"
