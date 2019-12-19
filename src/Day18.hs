@@ -48,8 +48,11 @@ getInput fn = parseGrid id <$> readFile fn -- "input/day18"
 displayMap :: World -> String
 displayMap m = drawString m (\p -> Map.findWithDefault ' ' p m)
 
+entrances :: World -> [(Int,Int)]
+entrances = fmap fst . filter ((== '@') . snd) . Map.toList
+
 entrance :: World -> (Int,Int)
-entrance = fst . head . filter ((== '@') . snd) . Map.toList
+entrance = head . entrances
 
 keys :: World -> World
 keys = Map.filter isLower
@@ -274,6 +277,15 @@ allReachable' BotState{..} point = go 1 start botKeys world (nf world start)
 
 do1 :: FilePath -> IO Int
 do1 fp = sum . fmap length . breakfastCached <$> getInput fp
+
+p2Input :: FilePath -> IO World
+p2Input fp = do
+  orig <- getInput fp
+  let (x,y) = entrance orig
+  pure $ Map.unions [
+    Map.fromList [((x+xo, y+yo), '@') | xo <- [-1,1], yo <- [-1,1]],
+    Map.fromList [((x+xo, y+yo), '#') | xo <- [-1..1], yo <- [-1..1]],
+    orig]
 
 part1 :: IO Int
 part1 = do1 "input/day18"
