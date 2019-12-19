@@ -69,15 +69,14 @@ type Dest = (Point, Set Char, Char, [Point])
 
 type KeysGraph = Map Point (Map Char Dest)
 
-type Cache = Map (Set (Int,Int), Set Char) [[Point]]
-
-cached :: Set (Int,Int) -> Set Char -> (Set (Int,Int) -> Set Char -> State Cache [[Point]]) -> State Cache [[Point]]
-cached p ks f = do
+cached :: Ord k => k -> (k -> State (Map k v) v) -> State (Map k v) v
+cached k f = do
   cache <- get
-  case Map.lookup (p,ks) cache of
-    Nothing -> f p ks >>= \v -> modify (Map.insert (p,ks) v) >> pure v
+  case Map.lookup k cache of
+    Nothing -> f k >>= \v -> modify (Map.insert k v) >> pure v
     Just v  -> pure v
 
+type Cache = Map (Set (Int,Int), Set Char) [[Point]]
 
 breakfast :: World -> [[Point]]
 breakfast m = evalState (go (Set.fromList . Map.elems $ keys m) mempty (Set.fromList $ entrances m) []) mempty
@@ -87,11 +86,11 @@ breakfast m = evalState (go (Set.fromList . Map.elems $ keys m) mempty (Set.from
     go :: Set Char -> Set Char -> Set (Int,Int) -> [[Point]] -> State Cache [[Point]]
     go need have pts ans
       | null need = pure ans
-      | otherwise = cached pts have fetch >>= pure . (<> ans)
+      | otherwise = cached (pts, have) fetch >>= pure . (<> ans)
 
       where
-        fetch :: Set (Int,Int) -> Set Char -> State Cache [[Point]]
-        fetch ps h = do
+        fetch :: (Set (Int,Int), Set Char) -> State Cache [[Point]]
+        fetch (ps, h) = do
           let todos = concatMap (\p -> zip (repeat p) $ possible p h km) $ Set.toList ps
           minimumOn pathlen <$> traverse descend todos
 
