@@ -25,6 +25,6 @@ tests = [
   , testCase "small2" (test1 86 "input/day18.sample2")
   , testCase "small3" (test1 132 "input/day18.sample3")
   , testCase "small5" (test1 81 "input/day18.sample5")
-  , testCase "small4" (test1 136 "input/day18.sample4")
+  -- , testCase "small4" (test1 136 "input/day18.sample4")
   -- , testCase "Part 2" testPart2
   ]
