@@ -10,8 +10,6 @@ import           Control.Monad.State
 import           Control.Parallel.Strategies (parMap, rdeepseq)
 import           Data.Char                   (isAlpha, isLower, isUpper,
                                               toLower, toUpper)
-import           Data.Graph.AStar            (aStar)
-import qualified Data.HashSet                as HS
 import           Data.List.Extra             (minimumOn)
 import           Data.Map.Strict             (Map)
 import qualified Data.Map.Strict             as Map
@@ -112,21 +110,6 @@ dijk m = dijkstra nf start isDone
     nf (p, w, h) = map (\(np,_,c,ps) -> (length ps, (np, Set.delete c w, Set.insert c h))) $
                    possible p h km
 
-type HSDState = (Point, HS.HashSet Char, HS.HashSet Char, Int)
-
-ast :: World -> Maybe Int
-ast m = sum . fmap (\(_,_,_,x) -> x) <$> aStar nf dist (const 0) isDone start
-  where
-    start = (entrance m, (HS.fromList . Map.elems $ keys m), mempty, 0)
-    km = k2k m
-    kd = Map.map (\m -> Map.fromList $ map (\(p, _, _, ps) -> (p,filter (/= p) ps)) $ Map.elems m) km
-    isDone (_,x,_,_) = null x
-    dist (a,_,_,_) (b,_,_,_) = succ . length $ kd Map.! a Map.! b
-    nf (p, w, h, _) = HS.fromList $ map (\(np,_,c,ps) ->
-                                           (np, HS.delete c w, HS.insert c h, length ps)) $
-                      possible p (hsh h) km
-    hsh = Set.fromList . HS.toList
-
 {-
 withSort :: World -> [[Point]]
 withSort m = undefined
@@ -192,9 +175,6 @@ k2k = k2kOn isLower
 
 do1 :: FilePath -> IO Int
 do1 fp = sum . fmap length . breakfast <$> getInput fp
-
-do1ast :: FilePath -> IO Int
-do1ast fp = fromJust . ast <$> getInput fp
 
 do1dijk :: FilePath -> IO Int
 do1dijk fp = fst . fromJust . dijk <$> getInput fp
