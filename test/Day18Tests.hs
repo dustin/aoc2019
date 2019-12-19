@@ -15,7 +15,7 @@ testPart2 = assertEqual "" 2086 =<< part2
 
 test1 :: Int -> FilePath -> Assertion
 test1 want fp = do
-  n <- do1 fp
+  n <- do1dijk fp
   assertEqual "" want n
 
 test2 :: Int -> FilePath -> Assertion
@@ -25,8 +25,8 @@ test2 want fp = do
 
 tests :: [TestTree]
 tests = [
-  -- testCase "part1" (test1 4590 "input/day18")
-  testCase "small1" (test1 8 "input/day18.small")
+  testCase "part1" (test1 4590 "input/day18")
+  , testCase "small1" (test1 8 "input/day18.small")
   , testCase "small2" (test1 86 "input/day18.sample2")
   , testCase "small3" (test1 132 "input/day18.sample3")
   , testCase "small5" (test1 81 "input/day18.sample5")

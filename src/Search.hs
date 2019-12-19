@@ -94,15 +94,15 @@ resolveDijkstra m l start end = case Map.lookup end m of
       | otherwise = next : go next
       where next = l Map.! pt
 
--- | 'dijkstra' uses [Dijkstra's
+-- | 'dijkstra''' uses [Dijkstra's
 -- Algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm) to
 -- find the lowest cost path to a given destination.
 dijkstra :: Ord v => (v -> [(Int,v)]) -- ^ Provide a list of all neighbors of v with their associated costs.
          -> v -- ^ The starting point.
-         -> v -- ^ The destination point.
+         -> (v -> Bool) -- ^ Goal function
          -> Maybe (Int,[v])  -- ^ The cost to the destination, and the path to get there.
-dijkstra neighbrf start end = resolve (dijkstra' neighbrf start (== end))
-  where resolve (_, m,l) = resolveDijkstra m l start end
+dijkstra neighbrf start goal = resolve (dijkstra' neighbrf start goal)
+  where resolve (e, m,l) = resolveDijkstra m l start e
 
 -- | 'binSearch' performs a binary search to find the boundary
 -- function where a function returns its highest 'LT' value.

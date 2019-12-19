@@ -40,7 +40,7 @@ countOrbits omap = sum orbits
 
 -- the subtract 2 in there is to remove the endpoints
 countTransfers :: Text -> Text -> OMap -> Maybe Int
-countTransfers f t omap = subtract 2 . fst <$> dijkstra (dmap Map.!) f t
+countTransfers f t omap = subtract 2 . fst <$> dijkstra (dmap Map.!) f (== t)
   where
     dmap = fmap (1,) <$> Map.unionWith (<>) (fmap (:[]) omap) rmap
     rmap = Map.fromListWith (<>) . fmap (fmap (:[]) . swap) $ Map.toList omap

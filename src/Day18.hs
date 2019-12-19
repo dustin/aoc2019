@@ -18,7 +18,6 @@ import qualified Data.Map.Strict             as Map
 import           Data.Maybe                  (fromJust)
 import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
-import           Debug.Trace
 
 import           AoC
 import           Search
@@ -104,19 +103,14 @@ breakfast m = evalState (go (Set.fromList . Map.elems $ keys m) mempty (Set.from
 
 type DState = (Point, Set Char, Set Char)
 
-dijk :: World -> Maybe (Int, [Point])
-dijk m = res $ dijkstra' nf start isDone
+dijk :: World -> Maybe (Int, [DState])
+dijk m = dijkstra nf start isDone
   where
     start = (entrance m, (Set.fromList . Map.elems $ keys m), mempty)
     km = k2k m
-    isDone :: DState -> Bool
     isDone (_,x,_) = null x
-
-    res :: (DState, Map DState Int, Map DState DState) -> Maybe (Int, [Point])
-    res (e, m,l) = (fmap.fmap) (\(p, _, _) -> p) <$> resolveDijkstra m l start e
-
-    nf :: DState -> [(Int, DState)]
-    nf (p, w, h) = map (\(np,_,c,ps) -> (1 + length ps, (p, Set.delete c w, Set.insert c h))) $ possible p h km
+    nf (p, w, h) = map (\(np,_,c,ps) -> (length ps, (np, Set.delete c w, Set.insert c h))) $
+                   possible p h km
 
 type HSDState = (Point, HS.HashSet Char, HS.HashSet Char, Int)
 
@@ -201,6 +195,9 @@ do1 fp = sum . fmap length . breakfast <$> getInput fp
 
 do1ast :: FilePath -> IO Int
 do1ast fp = fromJust . ast <$> getInput fp
+
+do1dijk :: FilePath -> IO Int
+do1dijk fp = fst . fromJust . dijk <$> getInput fp
 
 do2 :: FilePath -> IO Int
 do2 fp = sum . fmap length . breakfast <$> getInput fp
