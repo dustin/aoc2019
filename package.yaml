@@ -44,6 +44,8 @@ dependencies:
 - astar
 - mtl
 - unordered-containers
+- async
+- fgl
 
 library:
   source-dirs: src

@@ -13,12 +13,13 @@ Things I use for searching space in AoC.
 {-# LANGUAGE LambdaCase #-}
 
 module Search (dijkstra', dijkstra, resolveDijkstra, binSearch, autoBinSearch, binSearchM,
-               findCycle, findMin, findMax) where
+               findCycle, findMin, findMax, bfs, bfsOn) where
 
 import           Data.Map        (Map)
 import qualified Data.Map.Strict as Map
 import qualified Data.PQueue.Min as Q
 import qualified Data.Set        as Set
+import qualified Queue           as Queue
 
 -- | Get the position of the start of the first cycle and the cycle length from a list.
 findCycle :: Ord b => (a -> b) -> [a] -> (Int,Int,a)
@@ -29,6 +30,28 @@ findCycle f = go 0 mempty
                         Nothing -> go (n+1) (Map.insert t n mem) xs
                         Just o  -> (o,n - o,x)
       where t = f x
+
+
+bfs :: Ord a => (a -> [a]) -> a -> [a]
+bfs = bfsOn id
+
+bfsOn ::
+  Ord r =>
+  (a -> r)   {- ^ representative function   -} ->
+  (a -> [a]) {- ^ successor state generator -} ->
+  a          {- ^ initial state             -} ->
+  [a]        {- ^ reachable states          -}
+bfsOn rep next start = loop Set.empty (Queue.singleton start)
+  where
+    loop _ Queue.Empty = []
+    loop seen (x Queue.:<| q1)
+      | Set.member r seen =     loop seen  q1
+      | otherwise         = x : loop seen1 q2
+      where
+        r     = rep x
+        seen1 = Set.insert r seen
+        q2    = Queue.appendList (next x) q1
+
 
 -- Tests for this are in Day22.
 
