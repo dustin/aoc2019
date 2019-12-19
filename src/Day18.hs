@@ -69,9 +69,9 @@ type Dest = (Point, Set Char, Char, [Point])
 
 type KeysGraph = Map Point (Map Char Dest)
 
-type BCache = Map ((Int,Int), Set Char) [[Point]]
+type Cache = Map (Set (Int,Int), Set Char) [[Point]]
 
-cached :: (Int,Int) -> Set Char -> ((Int,Int) -> Set Char -> State BCache [[Point]]) -> State BCache [[Point]]
+cached :: Set (Int,Int) -> Set Char -> (Set (Int,Int) -> Set Char -> State Cache [[Point]]) -> State Cache [[Point]]
 cached p ks f = do
   cache <- get
   case Map.lookup (p,ks) cache of
@@ -80,25 +80,24 @@ cached p ks f = do
 
 
 breakfast :: World -> [[Point]]
-breakfast m = evalState (go (Set.fromList . Map.elems $ keys m) mempty (entrances m) []) mempty
+breakfast m = evalState (go (Set.fromList . Map.elems $ keys m) mempty (Set.fromList $ entrances m) []) mempty
   where
     km = k2k m
     pathlen = length . concat
-    go :: Set Char -> Set Char -> [(Int,Int)] -> [[Point]] -> State BCache [[Point]]
-    go need have (pos:rest) ans
+    go :: Set Char -> Set Char -> Set (Int,Int) -> [[Point]] -> State Cache [[Point]]
+    go need have pts ans
       | null need = pure ans
-      | nomoves = go need have (rest<>[pos]) ans
-      | otherwise = cached pos have fetch >>= pure . (<> ans)
+      | otherwise = cached pts have fetch >>= pure . (<> ans)
 
       where
-        nomoves = null $ possible pos have km
-        fetch :: (Int,Int) -> Set Char -> State BCache [[Point]]
-        fetch p h = do
-          xs <- mapM (descend need h rest) (possible p h km)
-          pure $ minimumOn pathlen xs
+        fetch :: Set (Int,Int) -> Set Char -> State Cache [[Point]]
+        fetch ps h = do
+          let todos = concatMap (\p -> zip (repeat p) $ possible p h km) $ Set.toList ps
+          minimumOn pathlen <$> traverse descend todos
 
-    descend need have rest (p, _, c, path) = go (Set.delete c need) (Set.insert c have) (p:rest) [path]
-
+            where
+              descend (op, (p, _, c, path)) = go (Set.delete c need) (Set.insert c h) adjps [path]
+                where adjps = Set.insert p $ Set.delete op $ ps
 {-
 withSort :: World -> [[Point]]
 withSort m = undefined
