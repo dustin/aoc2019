@@ -81,6 +81,33 @@ type Dest = (Point, Set Char, Char, [Point])
 
 type KeysGraph = Map Point (Map Char Dest)
 
+type BCache = Map ((Int,Int), Set Char) [[Point]]
+
+cached :: (Int,Int) -> Set Char -> ((Int,Int) -> Set Char -> State BCache [[Point]]) -> State BCache [[Point]]
+cached p ks f = do
+  cache <- get
+  case Map.lookup (p,ks) cache of
+    Nothing -> f p ks >>= \v -> modify (Map.insert (p,ks) v) >> pure v
+    Just v  -> pure v
+
+breakfastCached :: World -> [[Point]]
+breakfastCached m = evalState (go (Set.fromList . Map.elems $ keys m) mempty (entrance m) []) mempty
+  where
+    km = k2k m
+    pathlen = length . concat
+    go :: Set Char -> Set Char -> (Int,Int) -> [[Point]] -> State BCache [[Point]]
+    go need have pos ans
+      | null need = pure ans
+      | otherwise = cached pos have fetch >>= pure . (<> ans)
+
+      where
+        fetch :: (Int,Int) -> Set Char -> State BCache [[Point]]
+        fetch p h = do
+          xs <- mapM (descend need h) (possible p h km)
+          pure $ minimumOn pathlen xs
+
+    descend need have (p, _, c, path) = go (Set.delete c need) (Set.insert c have) p [path]
+
 breakfast :: World -> [[Point]]
 breakfast m = go (Set.fromList . Map.elems $ keys m) mempty (entrance m) []
   where
@@ -246,7 +273,7 @@ allReachable' BotState{..} point = go 1 start botKeys world (nf world start)
     ns ks points m = dd $ filter (\p -> reachableWithKeys ks $ Map.lookup p m) $ concatMap around points
 
 do1 :: FilePath -> IO Int
-do1 fp = sum . fmap length . breakfast <$> getInput fp
+do1 fp = sum . fmap length . breakfastCached <$> getInput fp
 
 part1 :: IO Int
 part1 = do1 "input/day18"
