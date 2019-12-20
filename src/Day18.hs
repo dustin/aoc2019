@@ -5,12 +5,9 @@
 
 module Day18 where
 
-import           Control.DeepSeq             (NFData (..))
-import           Control.Monad.State
 import           Control.Parallel.Strategies (parMap, rdeepseq)
-import           Data.Char                   (isAlpha, isLower, isUpper,
-                                              toLower, toUpper)
-import           Data.List.Extra             (minimumOn)
+import           Data.Char                   (isLower, isUpper, toLower,
+                                              toUpper)
 import           Data.Map.Strict             (Map)
 import qualified Data.Map.Strict             as Map
 import           Data.Maybe                  (fromJust)
@@ -24,19 +21,6 @@ import           Vis
 type World = Map (Int,Int) Char
 
 type Point = (Int,Int)
-
-data BotState = BotState {
-  world    :: World,
-  botPos   :: Point,
-  botKeys  :: Set Char,
-  botGoals :: Map Char (Int,Int),
-  keySeq   :: [Char],
-  botPaths :: [[Point]]
-  } deriving (Show)
-
-instance NFData BotState  where
-  rnf BotState{..} = botPaths `seq` ()
-
 
 getInput :: FilePath -> IO World
 getInput fn = parseGrid id <$> readFile fn -- "input/day18"
@@ -53,12 +37,6 @@ entrance = head . entrances
 keys :: World -> World
 keys = Map.filter isLower
 
-doors :: World -> World
-doors = Map.filter isUpper
-
-remaining :: World -> World
-remaining = Map.filter isAlpha
-
 flipMap :: Ord b => Map a b -> Map b a
 flipMap = Map.foldrWithKey (\k x -> Map.insert x k) mempty
 
@@ -69,35 +47,6 @@ around (x,y) = [(x,y-1), (x-1,y), (x+1,y), (x,y+1)]
 type Dest = (Point, Set Char, Char, [Point])
 
 type KeysGraph = Map Point (Map Char Dest)
-
-cached :: Ord k => k -> (k -> State (Map k v) v) -> State (Map k v) v
-cached k f = do
-  cache <- get
-  case Map.lookup k cache of
-    Nothing -> f k >>= \v -> modify (Map.insert k v) >> pure v
-    Just v  -> pure v
-
-type Cache = Map (Set (Int,Int), Set Char) [[Point]]
-
-breakfast :: World -> [[Point]]
-breakfast m = evalState (go (Set.fromList . Map.elems $ keys m) mempty (Set.fromList $ entrances m) []) mempty
-  where
-    km = k2k m
-    pathlen = length . concat
-    go :: Set Char -> Set Char -> Set (Int,Int) -> [[Point]] -> State Cache [[Point]]
-    go need have pts ans
-      | null need = pure ans
-      | otherwise = cached (pts, have) fetch >>= pure . (<> ans)
-
-      where
-        fetch :: (Set (Int,Int), Set Char) -> State Cache [[Point]]
-        fetch (ps, h) = do
-          let todos = concatMap (\p -> zip (repeat p) $ possible p h km) $ Set.toList ps
-          minimumOn pathlen <$> traverse descend todos
-
-            where
-              descend (op, (p, _, c, path)) = go (Set.delete c need) (Set.insert c h) adjps [path]
-                where adjps = Set.insert p $ Set.delete op $ ps
 
 type DState = (Set Point, Set Char, Set Char)
 
@@ -110,18 +59,6 @@ dijk m = dijkstra nf start isDone
     nf (ps, w, h) = map (\(op,(np,_,c,ps')) -> (length ps', (adjps op np ps, Set.delete c w, Set.insert c h))) $
                     concatMap (\p -> zip (repeat p) (possible p h km)) ps
       where adjps op np = Set.insert np . Set.delete op
-
-{-
-withSort :: World -> [[Point]]
-withSort m = undefined
-  where km = k2k m
-        klocs = flipMap $ keys m
-        dlocs = flipMap $ toLower <$> doors m
-        kgr = k2kOn isLower m
-        dgr = k2kOn isUpper m
-        doorDeps d =
-        -- g = G.graphFromEdges . map (\(Dep ts (Thing _ k)) -> (k,k, thingName <$> ts)) $ lkm
--}
 
 graphviz :: World -> String
 graphviz w = "digraph g {\n" <> unlines [each k | k <- Map.toList km] <> "\n}\n"
@@ -175,16 +112,10 @@ k2k :: World -> Map Point (Map Char Dest)
 k2k = k2kOn isLower
 
 do1 :: FilePath -> IO Int
-do1 fp = sum . fmap length . breakfast <$> getInput fp
-
-do1dijk :: FilePath -> IO Int
-do1dijk fp = fst . fromJust . dijk <$> getInput fp
+do1 fp = fst . fromJust . dijk <$> getInput fp
 
 do2 :: FilePath -> IO Int
-do2 fp = sum . fmap length . breakfast <$> getInput fp
-
-do2dijk :: FilePath -> IO Int
-do2dijk fp = fst . fromJust . dijk <$> getInput fp
+do2 fp = fst . fromJust . dijk <$> getInput fp
 
 p2Input :: FilePath -> IO World
 p2Input fp = do
