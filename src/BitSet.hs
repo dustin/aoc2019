@@ -3,58 +3,58 @@
 module BitSet where
 
 import           Control.DeepSeq (NFData (..))
-import           Data.Bits       (clearBit, popCount, setBit, testBit, (.|.))
+import           Data.Bits       (Bits (..), clearBit, popCount, setBit,
+                                  testBit, (.|.))
 import           Data.Ix         (Ix (..))
 import           Data.List       (intercalate)
 import           Data.Semigroup  (Semigroup (..))
-import           Data.Word       (Word32)
 
-data BitSet i = BitSet (i,i) Word32
+data BitSet i w = BitSet (i,i) w
 
-instance Eq (BitSet i) where
+instance Eq w => Eq (BitSet i w) where
   (BitSet _ a) == (BitSet _ b) = a == b
 
 -- compare :: a -> a -> Ordering
-instance Ord (BitSet i) where
+instance Ord w => Ord (BitSet i w) where
   compare (BitSet _ a) (BitSet _ b) = compare a b
 
-instance NFData (BitSet i) where
+instance NFData (BitSet i w) where
   rnf (BitSet _ a) = a `seq` ()
 
-bitSet :: Ix i => (i,i) -> BitSet i
+bitSet :: (Bits w, Ix i) => (i,i) -> BitSet i w
 bitSet ins
   | rangeSize ins > 32 = error "e too big"
-  | otherwise = BitSet ins 0
+  | otherwise = BitSet ins zeroBits
 
-insert :: Ix i => i -> BitSet i -> BitSet i
+insert :: (Bits w, Ix i) => i -> BitSet i w -> BitSet i w
 insert i (BitSet r x) = BitSet r $ x `setBit` index r i
 
-null :: BitSet i -> Bool
-null (BitSet _ x) = x == 0
+null :: Bits w => BitSet i w -> Bool
+null = (== 0) . BitSet.length
 
-length :: BitSet i -> Int
+length :: Bits w => BitSet i w -> Int
 length (BitSet _ x) = popCount x
 
-member :: Ix i => i -> BitSet i -> Bool
+member :: (Bits w, Ix i) => i -> BitSet i w -> Bool
 member i (BitSet r x) = testBit x (index r i)
 
-notMember :: Ix i => i -> BitSet i -> Bool
+notMember :: (Bits w, Ix i) => i -> BitSet i w -> Bool
 notMember i = not . member i
 
-delete :: Ix i => i -> BitSet i -> BitSet i
+delete :: (Bits w, Ix i) => i -> BitSet i w -> BitSet i w
 delete i (BitSet r x) = BitSet r $ x `clearBit` index r i
 
-isSubsetOf :: BitSet i -> BitSet i -> Bool
+isSubsetOf :: Bits w => BitSet i w -> BitSet i w -> Bool
 isSubsetOf (BitSet _ a) (BitSet _ b) = b == b .|. a
 
-toList :: Ix i => BitSet i -> [i]
+toList :: (Bits w, Ix i) => BitSet i w -> [i]
 toList bs@(BitSet r _) = filter (`member` bs) $ range r
 
-instance Semigroup (BitSet i) where
+instance Bits w => Semigroup (BitSet i w) where
   (BitSet r a) <> (BitSet _ b) = BitSet r (a .|. b)
 
-instance (Show i, Ix i) => Show (BitSet i) where
+instance (Bits w, Show i, Ix i) => Show (BitSet i w) where
   show bs@(BitSet r _) = "fromList " <> show r <> " [" <> intercalate ", " (map show (toList bs)) <> "]"
 
-fromList :: Ix i => (i,i) -> [i] -> BitSet i
+fromList :: (Bits w, Ix i) => (i,i) -> [i] -> BitSet i w
 fromList r = foldr insert (bitSet r)

@@ -13,6 +13,7 @@ import qualified Data.Map.Strict             as Map
 import           Data.Maybe                  (fromJust)
 import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
+import           Data.Word                   (Word32)
 
 import           AoC
 import           BitSet                      (BitSet)
@@ -45,7 +46,7 @@ flipMap = Map.foldrWithKey (\k x -> Map.insert x k) mempty
 around :: Point -> [Point]
 around (x,y) = [(x,y-1), (x-1,y), (x+1,y), (x,y+1)]
 
-type CharSet = BitSet Char
+type CharSet = BitSet Char Word32
 
 emptyCharSet :: CharSet
 emptyCharSet = BitSet.bitSet ('a', 'z')
