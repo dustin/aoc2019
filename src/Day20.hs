@@ -28,17 +28,14 @@ displayMap m = drawString m (\p -> Map.findWithDefault ' ' p m)
 around :: Point -> [Point]
 around (x,y) = [(x,y-1), (x-1,y), (x+1,y), (x,y+1)]
 
-flipMap :: Ord b => Map a b -> Map b a
-flipMap = Map.foldrWithKey (\k x -> Map.insert x k) mempty
-
 portalRev :: Map Point PortalID -> Map PortalID [Point]
 portalRev m = Map.fromListWith (<>) [(v,[k]) | (k,v) <- Map.toList m]
 
 warpMap :: Map Point PortalID -> Map Point Point
-warpMap = Map.fromList . concatMap m . Map.toList . portalRev
+warpMap = Map.fromList . concatMap m . Map.elems . portalRev
   where
-    m (_,[v1, v2]) = [(v1,v2), (v2,v1)]
-    m _            = []
+    m [v1, v2] = [(v1,v2), (v2,v1)]
+    m _        = []
 
 type PortalID = (Char, Char)
 
@@ -66,8 +63,37 @@ findPath m = dijkstra nf start (== end)
     end = head $ pr Map.! ('Z', 'Z')
     nf p = fmap (1,) (filter (\p' -> Map.lookup p' m == Just '.') (around p) <> maybeToList (Map.lookup p warps))
 
+insidePortals :: World -> Map Point PortalID
+insidePortals m = Map.filterWithKey (\k _ -> inside k) . portals $ m
+  where
+    ((lowx,lowy),(hix,hiy)) = bounds2d . Map.filter (== '.') $ m
+    outside (x,y) = x == lowx || x == hix || y == lowy || y == hiy
+    inside = not . outside
+
+findPath2 :: World -> Maybe Int
+findPath2 m = fst <$> dijkstra nf start (== end)
+  where
+    ps = portals m
+    pr = portalRev ps
+    insideMap = insidePortals m
+    inside = (`Map.member` insideMap)
+    outside = not . (`Map.member` insideMap)
+
+    warps = warpMap ps
+    start :: (Int, Point)
+    start = (0, head $ pr Map.! ('A', 'A'))
+    end = (0, head $ pr Map.! ('Z', 'Z'))
+    nf :: (Int,Point) -> [(Int,(Int,Point))]
+    nf p = neighbors p <> warp p
+    neighbors (l,p) = fmap (\p' -> (1,(l,p'))) $ filter (\p' -> Map.lookup p' m == Just '.') (around p)
+    warp (l,p)
+      | l == 0 && outside p = []
+      | otherwise = case Map.lookup p warps of
+                      Nothing -> []
+                      Just p' -> [(1, (if inside p then l + 1 else l - 1, p'))]
+
 part1 :: IO Int
 part1 = fst . fromJust . findPath <$> getInput "input/day20"
 
 part2 :: IO Int
-part2 = pure 0
+part2 = fromJust . findPath2 <$> getInput "input/day20"
