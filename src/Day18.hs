@@ -6,7 +6,6 @@
 module Day18 where
 
 import           Control.Parallel.Strategies (parMap, rdeepseq)
-import           Data.Bits                   (bit, setBit)
 import           Data.Char                   (intToDigit, isLower, isUpper,
                                               toLower, toUpper)
 import           Data.Map.Strict             (Map)
@@ -14,9 +13,10 @@ import qualified Data.Map.Strict             as Map
 import           Data.Maybe                  (fromJust)
 import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
-import           Data.Word                   (Word32)
 
 import           AoC
+import           BitSet                      (BitSet)
+import qualified BitSet                      as BitSet
 import           Search
 import           Vis
 
@@ -45,20 +45,25 @@ flipMap = Map.foldrWithKey (\k x -> Map.insert x k) mempty
 around :: Point -> [Point]
 around (x,y) = [(x,y-1), (x-1,y), (x+1,y), (x,y+1)]
 
+type CharSet = BitSet Char
+
+emptyCharSet :: CharSet
+emptyCharSet = BitSet.bitSet ('a', 'z')
+
 -- Destination has a set of blockers and what we get when we get through them.
-type Dest = (Point, Set Char, Char, [Point])
+type Dest = (Point, CharSet, Char, [Point])
 
 type KeysGraph = Map Point (Map Char Dest)
 
-type DState = (Set Point, Set Char, Set Char)
+type DState = (Set Point, CharSet, CharSet)
 
 dijk :: World -> Maybe (Int, [DState])
 dijk m = dijkstra nf start isDone
   where
-    start = (Set.fromList $ entrances m, (Set.fromList . Map.elems $ keys m), mempty)
+    start = (Set.fromList $ entrances m, (BitSet.fromList ('a', 'z') . Map.elems $ keys m), emptyCharSet)
     km = k2k m
-    isDone (_,x,_) = null x
-    nf (ps, w, h) = map (\(op,(np,_,c,ps')) -> (length ps', (adjps op np ps, Set.delete c w, Set.insert c h))) $
+    isDone (_,x,_) = BitSet.null x
+    nf (ps, w, h) = map (\(op,(np,_,c,ps')) -> (length ps', (adjps op np ps, BitSet.delete c w, BitSet.insert c h))) $
                     concatMap (\p -> zip (repeat p) (possible p h km)) ps
       where adjps op np = Set.insert np . Set.delete op
 
@@ -79,9 +84,9 @@ graphviz w = "digraph g {\n" <>  unlines (nodes <> ["  " <> show [s] <> " -> " <
         each (p, m) = concatMap dst $ Map.elems m
           where t = w' Map.! p
                 dst (_, drs, c, _)
-                  | null drs = [(t,c)]
-                  | otherwise = [ (t, toUpper dr) | dr <- Set.toList drs] <>
-                                [ (toUpper dr, c) | dr <- Set.toList drs]
+                  | BitSet.null drs = [(t,c)]
+                  | otherwise = [ (t, toUpper dr) | dr <- BitSet.toList drs] <>
+                                [ (toUpper dr, c) | dr <- BitSet.toList drs]
 
 -- no doors
 graphviz' :: World -> String
@@ -93,10 +98,10 @@ graphviz' w = "graph g {\n" <> unlines [each k | k@(a,_) <- pairs, a /= '@'] <> 
           where mm a b = (min a b, max a b)
         each (a, b) = "  " <> show a <> " -- " <> show b
 
-possible :: Point -> Set Char -> KeysGraph -> [Dest]
+possible :: Point -> CharSet -> KeysGraph -> [Dest]
 possible p ks = filter (\x -> needed x && reachable x) . Map.elems . (Map.! p)
-  where reachable (_,ds,_,_) = null ds || ds `Set.isSubsetOf` ks
-        needed (_,_,c,_) = Set.notMember c ks
+  where reachable (_,ds,_,_) = BitSet.null ds || ds `BitSet.isSubsetOf` ks
+        needed (_,_,c,_) = BitSet.notMember c ks
 
 showk2k :: Map Point (Map Char Dest) -> IO ()
 showk2k = mapM_ showk . Map.toList
@@ -104,20 +109,20 @@ showk2k = mapM_ showk . Map.toList
     showk :: (Point, Map Char Dest) -> IO ()
     showk (p, m) = putStrLn (show p) >> mapM_ showDest (Map.elems m)
     showDest (dp, ds, c, path) = putStrLn $ mconcat ["\t", show c, "@", show dp,
-                                                     " needs: ", Set.toList ds,
+                                                     " needs: ", BitSet.toList ds,
                                                      " len: ", show (length path)]
 
 k2kOn :: (Char -> Bool) -> World -> Map Point (Map Char Dest)
 k2kOn pr m = Map.fromList . fmap extractValue . parMap rdeepseq oneKey . (entrances m<>) . Map.keys . keys $ m
   where
-    oneKey kp = (kp, bfsOn (\(a,_,_,_) -> a) nf (kp, mempty, m Map.! kp, []))
+    oneKey kp = (kp, bfsOn (\(a,_,_,_) -> a) nf (kp, emptyCharSet, m Map.! kp, []))
 
     -- Get just the interesting destination paths.
     extractValue :: (Point, [Dest]) -> (Point, Map Char Dest)
     extractValue (p, dsts) = (p, Map.fromListWith best . fmap byChar . filter justKeys $ dsts)
       where
         -- Keys, but not self (i.e., anything with a destination)
-        justKeys (_,_,c,path) = pr c && (not . null) path
+        justKeys (_,_,c,path) = pr c && (not . Prelude.null) path
 
   {-
         prune :: [(Char, Dest)] -> [(Char, Dest)]
@@ -137,7 +142,7 @@ k2kOn pr m = Map.fromList . fmap extractValue . parMap rdeepseq oneKey . (entran
     nf (p, ks, _, path) = foldMap each $ around p
       where each np = let c = (m Map.! np) in
                         case () of _
-                                     | isUpper c -> [(np, Set.insert (toLower c) ks, c, np:path)]
+                                     | isUpper c -> [(np, BitSet.insert (toLower c) ks, c, np:path)]
                                      | c == '#' -> []
                                      | otherwise -> [(np, ks, c, np:path)]
 

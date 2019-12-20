@@ -30,7 +30,7 @@ tests = [
   , testCase "small2" (test1 86 "input/day18.sample2")
   , testCase "small3" (test1 132 "input/day18.sample3")
   , testCase "small5" (test1 81 "input/day18.sample5")
-  , testCase "small4" (test1 136 "input/day18.sample4") -- still slow
+  , testCase "small4" (test1 136 "input/day18.sample4")
   -- , testCase "part2" testPart2
   , testCase "small1 2" (test2 8 "input/day18.smallb")
   , testCase "larger 2" (test2 32 "input/day18.larger")
