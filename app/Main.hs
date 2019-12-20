@@ -5,4 +5,4 @@ module Main where
 import           Day18
 
 main :: IO ()
-main = print =<< do1dijk "input/day18"
+main = print =<< part2 -- print =<< do1dijk "input/day18"

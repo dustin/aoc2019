@@ -99,16 +99,17 @@ breakfast m = evalState (go (Set.fromList . Map.elems $ keys m) mempty (Set.from
               descend (op, (p, _, c, path)) = go (Set.delete c need) (Set.insert c h) adjps [path]
                 where adjps = Set.insert p $ Set.delete op $ ps
 
-type DState = (Point, Set Char, Set Char)
+type DState = (Set Point, Set Char, Set Char)
 
 dijk :: World -> Maybe (Int, [DState])
 dijk m = dijkstra nf start isDone
   where
-    start = (entrance m, (Set.fromList . Map.elems $ keys m), mempty)
+    start = (Set.fromList $ entrances m, (Set.fromList . Map.elems $ keys m), mempty)
     km = k2k m
     isDone (_,x,_) = null x
-    nf (p, w, h) = map (\(np,_,c,ps) -> (length ps, (np, Set.delete c w, Set.insert c h))) $
-                   possible p h km
+    nf (ps, w, h) = map (\(op,(np,_,c,ps')) -> (length ps', (adjps op np ps, Set.delete c w, Set.insert c h))) $
+                    concatMap (\p -> zip (repeat p) (possible p h km)) ps
+      where adjps op np = Set.insert np . Set.delete op
 
 {-
 withSort :: World -> [[Point]]
@@ -133,8 +134,8 @@ graphviz w = "digraph g {\n" <> unlines [each k | k <- Map.toList km] <> "\n}\n"
                   | otherwise = unlines [ toUpper dr : " -> " <> [c] | dr <- Set.toList drs]
 
 possible :: Point -> Set Char -> KeysGraph -> [Dest]
-possible p ks = filter (\x -> reachable x && needed x) . Map.elems . (Map.! p)
-  where reachable (_,ds,_,_) = ds `Set.isSubsetOf` ks
+possible p ks = filter (\x -> needed x && reachable x) . Map.elems . (Map.! p)
+  where reachable (_,ds,_,_) = null ds || ds `Set.isSubsetOf` ks
         needed (_,_,c,_) = Set.notMember c ks
 
 showk2k :: Map Point (Map Char Dest) -> IO ()
@@ -182,6 +183,9 @@ do1dijk fp = fst . fromJust . dijk <$> getInput fp
 do2 :: FilePath -> IO Int
 do2 fp = sum . fmap length . breakfast <$> getInput fp
 
+do2dijk :: FilePath -> IO Int
+do2dijk fp = fst . fromJust . dijk <$> getInput fp
+
 p2Input :: FilePath -> IO World
 p2Input fp = do
   orig <- getInput fp
@@ -195,4 +199,4 @@ part1 :: IO Int
 part1 = do1 "input/day18"
 
 part2 :: IO Int
-part2 = sum . fmap length . breakfast <$> p2Input "input/day18"
+part2 = fst . fromJust . dijk <$> p2Input "input/day18"

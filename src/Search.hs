@@ -15,11 +15,12 @@ Things I use for searching space in AoC.
 module Search (dijkstra', dijkstra, resolveDijkstra, binSearch, autoBinSearch, binSearchM,
                findCycle, findMin, findMax, bfs, bfsOn) where
 
-import           Data.Map        (Map)
-import qualified Data.Map.Strict as Map
-import qualified Data.PQueue.Min as Q
-import qualified Data.Set        as Set
-import qualified Queue           as Queue
+import           Control.Parallel.Strategies (parList, rseq, using)
+import           Data.Map                    (Map)
+import qualified Data.Map.Strict             as Map
+import qualified Data.PQueue.Min             as Q
+import qualified Data.Set                    as Set
+import qualified Queue                       as Queue
 
 -- | Get the position of the start of the first cycle and the cycle length from a list.
 findCycle :: Ord b => (a -> b) -> [a] -> (Int,Int,a)
@@ -76,10 +77,10 @@ dijkstra' neighbrf start done = go (Q.singleton (0,start)) (Map.singleton start 
 
       where
         ([(d,pt)], odo) = Q.splitAt 1 q
-        moves = filter (\(c,p') -> c+d < Map.findWithDefault (c+d+1) p' m) (neighbrf pt)
-        m' = Map.union (Map.fromList $ map (\(c,p') -> (p',c+d)) moves) m
-        l' = Map.union (Map.fromList $ map (\(_,p') -> (p',pt)) moves) l
-        psd = Q.fromList $ fmap (\(c,x) -> (d+c,x)) moves
+        moves = filter (\(c,p') -> c+d < Map.findWithDefault (c+d+1) p' m) (neighbrf pt) `using` parList rseq
+        m' = Map.union (Map.fromList [(p',c+d) | (c,p') <- moves]) m
+        l' = Map.union (Map.fromList [(p',pt) | (_,p') <- moves]) l
+        psd = Q.fromList [(d+c,x) | (c,x) <- moves]
 
 
 -- | Using maps computed by 'dijkstra'', find the cost and path from the
