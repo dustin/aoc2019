@@ -15,12 +15,12 @@ testPart2 = assertEqual "" 2086 =<< part2
 
 test1 :: Int -> FilePath -> Assertion
 test1 want fp = do
-  n <- do1dijk fp
+  n <- do1 fp
   assertEqual "" want n
 
 test2 :: Int -> FilePath -> Assertion
 test2 want fp = do
-  n <- do2dijk fp
+  n <- do2 fp
   assertEqual "" want n
 
 tests :: [TestTree]

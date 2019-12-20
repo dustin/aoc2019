@@ -6,13 +6,15 @@
 module Day18 where
 
 import           Control.Parallel.Strategies (parMap, rdeepseq)
-import           Data.Char                   (isLower, isUpper, toLower,
-                                              toUpper)
+import           Data.Bits                   (bit, setBit)
+import           Data.Char                   (intToDigit, isLower, isUpper,
+                                              toLower, toUpper)
 import           Data.Map.Strict             (Map)
 import qualified Data.Map.Strict             as Map
 import           Data.Maybe                  (fromJust)
 import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
+import           Data.Word                   (Word32)
 
 import           AoC
 import           Search
@@ -60,15 +62,36 @@ dijk m = dijkstra nf start isDone
                     concatMap (\p -> zip (repeat p) (possible p h km)) ps
       where adjps op np = Set.insert np . Set.delete op
 
+numberStarts :: World -> World
+numberStarts = Map.fromList . fk 1 . Map.toList
+  where
+    fk _ [] = []
+    fk n (e@(k,v):xs)
+      | v == '@' = (k, intToDigit n) : fk (n + 1) xs
+      | otherwise = e : fk n xs
+
 graphviz :: World -> String
-graphviz w = "digraph g {\n" <> unlines [each k | k <- Map.toList km] <> "\n}\n"
+graphviz w = "digraph g {\n" <>  unlines (nodes <> ["  " <> show [s] <> " -> " <> show [d]  | (s,d) <- links]) <> "\n}\n"
   where km = k2k w
-        each :: (Point, Map Char Dest) -> String
-        each (p, m) = unlines [ dst k | k <- Map.elems m ]
-          where t = w Map.! p
+        w' = numberStarts w
+        links = Set.toList . Set.fromList . concatMap each $ Map.toList km
+        nodes = [ "  " <> show [n] <> " [shape=box]" | n <- Map.elems . Map.filter isUpper $ w' ]
+        each (p, m) = concatMap dst $ Map.elems m
+          where t = w' Map.! p
                 dst (_, drs, c, _)
-                  | null drs = t : " -> " <> [c]
-                  | otherwise = unlines [ toUpper dr : " -> " <> [c] | dr <- Set.toList drs]
+                  | null drs = [(t,c)]
+                  | otherwise = [ (t, toUpper dr) | dr <- Set.toList drs] <>
+                                [ (toUpper dr, c) | dr <- Set.toList drs]
+
+-- no doors
+graphviz' :: World -> String
+graphviz' w = "graph g {\n" <> unlines [each k | k@(a,_) <- pairs, a /= '@'] <> "\n}\n"
+  where w' = numberStarts w
+        km = k2k w'
+        pairs :: [(Char,Char)]
+        pairs = Map.toList . Map.fromList . concatMap (\(k,dm) -> [mm (w' Map.! k) x | x <- Map.keys dm]) $ Map.toList km
+          where mm a b = (min a b, max a b)
+        each (a, b) = "  " <> show a <> " -- " <> show b
 
 possible :: Point -> Set Char -> KeysGraph -> [Dest]
 possible p ks = filter (\x -> needed x && reachable x) . Map.elems . (Map.! p)
@@ -90,11 +113,22 @@ k2kOn pr m = Map.fromList . fmap extractValue . parMap rdeepseq oneKey . (entran
     oneKey kp = (kp, bfsOn (\(a,_,_,_) -> a) nf (kp, mempty, m Map.! kp, []))
 
     -- Get just the interesting destination paths.
-    extractValue :: (Point, [(Point, Set Char, Char, [Point])]) -> (Point, Map Char Dest)
+    extractValue :: (Point, [Dest]) -> (Point, Map Char Dest)
     extractValue (p, dsts) = (p, Map.fromListWith best . fmap byChar . filter justKeys $ dsts)
       where
         -- Keys, but not self (i.e., anything with a destination)
         justKeys (_,_,c,path) = pr c && (not . null) path
+
+  {-
+        prune :: [(Char, Dest)] -> [(Char, Dest)]
+        prune = go . sortOn (length . pathOf . snd)
+          where
+            go :: [(Char, Dest)] -> [(Char, Dest)]
+            go []     = []
+            go (x@(_,el):xs) = x : filter ((`isSuffixOf` (pathOf el)) . pathOf . snd) (go xs)
+
+        pathOf (_,_,_,p') = p'
+-}
 
         -- Keep only the shorter ones
         best a@(_,_,_,apt) b@(_,_,_,bp) = if length apt > length bp then b else a
