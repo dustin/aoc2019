@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE TupleSections     #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module Day15 where
@@ -16,6 +17,7 @@ import           System.Console.ANSI
 import           System.IO           (hFlush, stdout)
 
 import           ComputerST
+import           Search
 import           TwoD                (Dir (..), Point, around)
 import           Vis
 
@@ -95,21 +97,17 @@ findPath prog = fst $ runSearch prog goalf (0,0)
       m <- gets world
       pure (Map.lookup point m == Just 'O')
 
--- TODO:  Can I express this with BFS?
-flood :: Point -> World -> (Int, [[Point]])
-flood start wm = go 0 startPs wm [startPs]
+floodCount :: Point -> World -> Int
+floodCount start wm = maximum . fmap fst $ bfsOn snd nf (0, start)
   where
-    startPs = ns [start] wm
-    go n points m vs
-      | (null . filter (== ' ') . Map.elems) m = (n, vs)
-      | otherwise = go (n+1) np up (np:vs)
-      where
-        np = ns points up
-        up = Map.union (Map.fromList [(p,'O') | p <- points]) m
+    nf (n,ps) = map (\p -> (n+1, p)) . filter (\p -> Map.lookup p wm == Just ' ') $ around ps
 
-    dd = HS.toList . HS.fromList
 
-    ns points m = dd $ filter (\p -> Map.findWithDefault '#' p m == ' ') $ concatMap around points
+flood :: Point -> World -> (Int, [[Point]])
+flood start wm = let ls= bfsOn (head.snd) nf (0, [start]) in foldr (\(n,p) (n', ps) -> (max n n', p:ps)) (0,[]) ls
+  where
+    nf :: (Int, [Point]) -> [(Int, [Point])]
+    nf (n,xs@(ps:_)) =  map (\p -> (n+1, p:xs)) . filter (\p -> Map.lookup p wm == Just ' ') $ around ps
 
 getInput :: IO Instructions
 getInput = readInstructions "input/day15"
@@ -123,7 +121,7 @@ part2 = do
   let wm = world . snd . runSearch prog (const $ pure False) $ (0,0)
       (o,_) = head . filter (\(_,c) -> c == 'O') $ Map.toList wm
 
-  pure . fst $ flood o wm
+  pure $ floodCount o wm
 
 drawInitial :: Instructions -> IO (World, DrawSpec)
 drawInitial prog = do

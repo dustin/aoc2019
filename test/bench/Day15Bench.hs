@@ -22,6 +22,6 @@ tests = [
       bench "part1" $ nf findPath prog
   ],
   env worldIn $ \ ~w -> bgroup "world" [
-      bench "part2" $ nf (fst . flood (18,-20)) w
+      bench "part2" $ nf (flood (18,-20)) w
       ]
   ]
