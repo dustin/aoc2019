@@ -39,7 +39,10 @@ parseAll :: Parser [Deal]
 parseAll = parseDeal `endBy` "\n"
 
 newDeck :: Cards
-newDeck = Seq.fromList [0..10006]
+newDeck = newDeckOf 10007
+
+newDeckOf :: Int -> Cards
+newDeckOf n = Seq.fromList [0..n - 1]
 
 apply :: [Deal] -> Cards -> Cards
 apply deals cards = foldl' deal cards deals
@@ -55,5 +58,32 @@ apply deals cards = foldl' deal cards deals
 part1 :: IO (Maybe Int)
 part1 =  Seq.findIndexL (== 2019) . flip apply newDeck <$> getInput "input/day22"
 
-part2 :: IO Int
-part2 = pure 0
+-- https://rosettacode.org/wiki/Modular_exponentiation#Haskell
+powm :: Integer -> Integer -> Integer -> Integer -> Integer
+powm _ 0 _ r = r
+powm b e m r
+  | e `mod` 2 == 1 = powm (b * b `mod` m) (e `div` 2) m (r * b `mod` m)
+powm b e m r = powm (b * b `mod` m) (e `div` 2) m r
+
+part2 :: IO Integer
+part2 = do
+  inp <- getInput "input/day22"
+  let (a, b) = reduce inp
+      x = offset * powm a deals deckSize 1
+      y = b * ((powm a deals deckSize 1) + deckSize - 1)
+      z = powm (a - 1) (deckSize - 2) deckSize 1
+
+  pure $ mds $ x + (y * z)
+
+  where
+    deckSize = 119315717514047
+    deals = 101741582076661
+    offset = 2020
+    mds = (`mod` deckSize)
+
+    reduce = foldr deal (1,0)
+      where
+        deal NewStack      (a,b) = (mds $ negate a, mds $ negate (b + 1))
+        deal (Cut x)       (a,b) = (a, mds $ (b + fromIntegral x))
+        deal (Increment x) (a,b) = let p = powm (fromIntegral x) (deckSize-2) deckSize 1 in
+                                     (mds (a * p), mds (b * p))
