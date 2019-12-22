@@ -20,6 +20,7 @@ import           Data.Map                    (Map)
 import qualified Data.Map.Strict             as Map
 import qualified Data.PQueue.Min             as Q
 import qualified Data.Set                    as Set
+import qualified Queue                       as Queue
 
 -- | Get the position of the start of the first cycle and the cycle length from a list.
 findCycle :: Ord b => (a -> b) -> [a] -> (Int,Int,a)
@@ -42,14 +43,15 @@ bfsOn ::
   (a -> [a]) {- ^ neighbors               -} ->
   a          {- ^ initial state           -} ->
   [a]        {- ^ reachable states        -}
-bfsOn rep next start = loop Set.empty [start]
+bfsOn rep next start = loop Set.empty (Queue.singleton start)
   where
-    loop _ [] = []
-    loop seen (x:xs)
+    loop _ Queue.Empty = []
+    loop seen inq
       | Set.member r seen =     loop seen xs
-      | otherwise         = x : loop (Set.insert r seen) (xs <> next x)
+      | otherwise         = x : loop (Set.insert r seen) (Queue.appendList xs $ next x)
       where
         r = rep x
+        Just (x, xs) = Queue.pop inq
 
 -- Tests for this are in Day22.
 

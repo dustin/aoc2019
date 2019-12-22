@@ -2,7 +2,10 @@
 
 module Main where
 
-import           Day18
+import           Day21
 
 main :: IO ()
-main = print =<< part2 -- print =<< do1dijk "input/day18"
+main = do
+  let scr = toScript find1
+  putStrLn scr
+  doRun (scr<>"WALK\n")
