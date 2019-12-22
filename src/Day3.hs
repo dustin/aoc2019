@@ -11,7 +11,6 @@ import           Text.Megaparsec.Char.Lexer (decimal)
 import           AoC                        (Parser, mdist2, parseFile)
 import           Vis
 
-
 data Dir = R | D | U | L deriving(Show)
 
 type Wire = [(Dir, Int)]

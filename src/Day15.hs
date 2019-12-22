@@ -16,9 +16,8 @@ import           System.Console.ANSI
 import           System.IO           (hFlush, stdout)
 
 import           ComputerST
+import           TwoD                (Dir (..), Point, around)
 import           Vis
-
-data Dir = N | E | S | W deriving (Show, Bounded, Enum, Eq)
 
 unDir :: Dir -> Int
 unDir N = 1
@@ -26,10 +25,7 @@ unDir S = 2
 unDir W = 3
 unDir E = 4
 
-otherDirs :: Dir -> [Dir]
-otherDirs d = filter (/= d) [minBound..]
-
-type World = Map (Int,Int) Char
+type World = Map Point Char
 
 displayMap :: World -> String
 displayMap m = drawString m (\p -> Map.findWithDefault ' ' p m)
@@ -43,25 +39,22 @@ displayMap m = drawString m (\p -> Map.findWithDefault ' ' p m)
 
 data BotState = BotState {
   world   :: World,
-  stateAt :: Map (Int,Int) Paused
+  stateAt :: Map Point Paused
   }
 
 type Excursion = State BotState
 
-fwd :: Dir -> (Int,Int) -> (Int,Int)
+fwd :: Dir -> Point -> Point
 fwd S (x,y) = (x,y+1)
 fwd N (x,y) = (x,y-1)
 fwd W (x,y) = (x-1,y)
 fwd E (x,y) = (x+1,y)
 
-around :: (Int,Int) -> [(Int,Int)]
-around p = [fwd d p | d <- [minBound..]]
-
-neighbors :: (Int,Int) -> Excursion [(Int,Int)]
+neighbors :: Point -> Excursion [Point]
 neighbors point = do
   BotState{..} <- get
   let p = stateAt Map.! point
-      nps = map (\(d,np) -> (np, runOne p [unDir d])) $ zip [minBound..] (around point)
+      nps = map (\(d,np) -> (np, runOne p [unDir d])) $ zip [minBound..] [fwd d point | d <- [minBound..]]
       chs = map (\(np, Paused{..}) -> (np, ch pausedOuts)) nps
       oks = filter (\(_,x) -> x `elem` [' ', 'O']) chs
   upd nps chs
@@ -83,10 +76,10 @@ runOne p@Paused{..} ins =
     Left (NoInput p') -> p'
     x                 -> error ("Unexpected termination: " <> show x)
 
-runSearch :: Instructions -> ((Int,Int) -> Excursion Bool) -> (Int,Int) -> (Maybe [(Int,Int)], BotState)
+runSearch :: Instructions -> (Point -> Excursion Bool) -> Point -> (Maybe [Point], BotState)
 runSearch prog goalf st = runState (go (execute prog)) (BotState (Map.singleton st ' ') mempty)
   where
-    go :: Either Termination FinalState -> Excursion (Maybe [(Int,Int)])
+    go :: Either Termination FinalState -> Excursion (Maybe [Point])
     go (Right _)            = pure Nothing
 
     go (Left (NoInput p)) = do
@@ -95,14 +88,15 @@ runSearch prog goalf st = runState (go (execute prog)) (BotState (Map.singleton 
 
     nf point = HS.fromList <$> neighbors point
 
-findPath :: Instructions -> Maybe [(Int,Int)]
+findPath :: Instructions -> Maybe [Point]
 findPath prog = fst $ runSearch prog goalf (0,0)
   where
     goalf point = do
       m <- gets world
       pure (Map.lookup point m == Just 'O')
 
-flood :: (Int,Int) -> World -> (Int, [[(Int,Int)]])
+-- TODO:  Can I express this with BFS?
+flood :: Point -> World -> (Int, [[Point]])
 flood start wm = go 0 startPs wm [startPs]
   where
     startPs = ns [start] wm

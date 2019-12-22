@@ -18,7 +18,10 @@ import           Control.Concurrent  (threadDelay)
 import           System.Console.ANSI
 import           System.IO           (hFlush, stdout)
 
-import           ComputerST
+import           ComputerST          (FinalState (..), Instructions,
+                                      Paused (..), Termination (..), execute,
+                                      readInstructions, resume)
+import           TwoD
 import           Vis
 
 getInput :: IO Instructions
@@ -26,10 +29,10 @@ getInput = readInstructions "input/day13"
 
 data Tile = EmptySpace | Wall | Block | Horizontal | Ball deriving (Show, Bounded, Enum, Eq)
 
-type TilePos = ((Int, Int), Tile)
+type TilePos = (Point, Tile)
 
 data Game = Game {
-  board :: Map (Int, Int) Tile,
+  board :: Map Point Tile,
   score :: Int
   } deriving (Show)
 
@@ -145,7 +148,7 @@ hackGame progIn = start
 
       where g' = updGame g pausedOuts
             hk :: Pages -> (Game, Pages)
-            hk pages = let bst@(x,y,vx,vy) = bstat pages
+            hk pages = let bst@(x,y,_,_) = bstat pages
                            (lx,ly) = lowBlock g'
                            dir = if lx <= 2 then 1 else (-1)
                            np@(nx,ny,_,_) = if y < ly+1 then bst
@@ -155,11 +158,10 @@ hackGame progIn = start
                          else
                            let (Game m s) = g'
                                m' = Map.insert (x,y) EmptySpace m
-                               m'' = Map.insert (nx,ny) Ball m'
-                               ng = Game m'' s in
+                               m'' = Map.insert (nx,ny) Ball m' in
                              (Game m'' s, wra pages np)
 
-            lowBlock :: Game -> (Int,Int)
+            lowBlock :: Game -> Point
             lowBlock (Game m _) = fst . maximumOn (snd.fst) . filter match $ Map.toList m
               where match (_,Block) = True
                     match _         = False

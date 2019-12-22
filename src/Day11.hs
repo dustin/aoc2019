@@ -9,15 +9,14 @@ import qualified Data.Map.Strict as Map
 
 import           AoC
 import           ComputerST
+import           TwoD
 import           Vis
 
 getInput :: IO Instructions
 getInput = readInstructions "input/day11"
 
-data Dir = U | R | D | L deriving (Show, Bounded, Enum, Eq)
-
-runOne :: Int -> Instructions -> Map (Int,Int) Int
-runOne start prog = go (0,0) U mempty (executeIn [start] prog)
+runOne :: Int -> Instructions -> Map Point Int
+runOne start prog = go (0,0) N mempty (executeIn [start] prog)
   where
     go _ _ m (Right _) = m
     go pos dir m (Left (NoInput p@Paused{..})) =
@@ -30,12 +29,7 @@ runOne start prog = go (0,0) U mempty (executeIn [start] prog)
     turn 0 = pred'
     turn _ = succ'
 
-    fwd D (x,y) = (x,y+1)
-    fwd U (x,y) = (x,y-1)
-    fwd L (x,y) = (x-1,y)
-    fwd R (x,y) = (x+1,y)
-
-displayMap :: Map (Int, Int) Int -> String
+displayMap :: Map Point Int -> String
 displayMap m = drawString m' cf
   where m' = fmap n m
         n 1 = '*'

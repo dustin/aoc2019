@@ -10,9 +10,10 @@ import           Data.Map.Strict             (Map)
 import qualified Data.Map.Strict             as Map
 
 import           AoC
+import           TwoD
 import           Vis
 
-newtype World = World (Map (Int,Int) Char) deriving (Show)
+newtype World = World (Map Point Char) deriving (Show)
 
 instance Bounded2D World where
   bounds2d (World m) = bounds2d m
@@ -26,10 +27,10 @@ getInput fn = parseInput <$> readFile fn
 parseInput :: String -> World
 parseInput = World . parseGrid id
 
-allSteroids :: World -> [(Int,Int)]
+allSteroids :: World -> [Point]
 allSteroids (World wm) = Map.keys . Map.filter (== '#') $ wm
 
-line :: (Int,Int) -> (Int,Int) -> [(Int,Int)]
+line :: Point -> Point -> [Point]
 line (x1,y1) (x2,y2)
   | dx == 0 = [(x1,y) | y <- [min y1 y2 .. max y1 y2]]
   | dy == 0 = [(x,y1) | x <- [min x1 x2 .. max x1 x2]]
@@ -41,7 +42,7 @@ line (x1,y1) (x2,y2)
         stepx = dx `div` g
         stepy = dy `div` g
 
-sees :: World -> (Int,Int) -> [(Int,Int)]
+sees :: World -> Point -> [Point]
 sees w p = flt [] aa
   where
     aa = sortOn (mdist2 p) (allSteroids w) `using` parList rseq
@@ -56,27 +57,27 @@ sees w p = flt [] aa
       where
         f k = k `elem` line p me
 
-dbgSees :: World -> (Int,Int) -> String
+dbgSees :: World -> Point -> String
 dbgSees w@(World wm) p@(px,py) = d <> "\n" <> pairs
   where
     seize = sees w p
     d = display . World $ Map.union (Map.fromList $ map (,'X') $ seize) wm
     pairs = intercalate "\n" $ (zipWith (\x y -> show x <> " -> " <> show y) seize $ map (\(x,y) -> (x-px, y-py)) $ seize)
 
-best :: World -> ((Int,Int),Int)
+best :: World -> (Point,Int)
 best w = maximumOn snd cz
   where aa = allSteroids w
         cz = zip aa (length . sees w <$> aa)
 
-bestPar :: World -> ((Int,Int),Int)
+bestPar :: World -> (Point,Int)
 bestPar w = maximumOn snd cz
   where aa = allSteroids w
         cz = zip aa (parMap rseq (length . sees w) aa)
 
-part1 :: IO ((Int,Int),Int)
+part1 :: IO (Point,Int)
 part1 = best <$> getInput "input/day10"
 
-sweep :: World -> (Int,Int) -> [(Int,Int)]
+sweep :: World -> Point -> [Point]
 sweep w o = sortOn (θ o) . sees w $ o
   where θ (x1,y1) (x2,y2) = -atan2 (x2 -. x1) (y2 -. y1) + pi
         (-.) :: Int -> Int -> Double

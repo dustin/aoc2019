@@ -16,9 +16,8 @@ import qualified Data.Map.Strict as Map
 
 import           AoC
 import           ComputerST
+import           TwoD
 import           Vis
-
-type Point = (Int,Int)
 
 type World = Map Point Char
 
@@ -31,9 +30,6 @@ getMap prog = parseGrid id . fmap chr . fromRight [] $ outputs <$> execute prog
 displayMap :: World -> String
 displayMap m = drawString m (\p -> Map.findWithDefault ' ' p m)
 
-around :: Point -> [Point]
-around (x,y) = [(x,y-1), (x-1,y), (x+1,y), (x,y+1)]
-
 neighbors :: World -> Point -> [Point]
 neighbors m c = [(x,y) | (x,y) <- around c, Map.lookup (x,y) m `elem` [Just '#', Just '^']]
 
@@ -42,14 +38,6 @@ intersections m = [(x,y) | x <- [mnx..mxx], y <- [mny..mxy], is (x,y)]
   where
     ((mnx,mny),(mxx,mxy)) = bounds2d m
     is c = Map.lookup c m == Just '#' && ((length $ neighbors m c) == 4)
-
-data Dir = N | E | S | W deriving (Show, Bounded, Enum, Eq)
-
-fwd :: Dir -> (Int,Int) -> (Int,Int)
-fwd S (x,y) = (x,y+1)
-fwd N (x,y) = (x,y-1)
-fwd W (x,y) = (x-1,y)
-fwd E (x,y) = (x+1,y)
 
 startingPoint :: World -> Point
 startingPoint = fst . head . filter ((== '^') . snd) . Map.toList

@@ -19,11 +19,10 @@ import           AoC
 import           BitSet                      (BitSet)
 import qualified BitSet                      as BitSet
 import           Search
+import           TwoD
 import           Vis
 
 type World = Map (Int,Int) Char
-
-type Point = (Int,Int)
 
 getInput :: FilePath -> IO World
 getInput fn = parseGrid id <$> readFile fn -- "input/day18"
@@ -42,9 +41,6 @@ keys = Map.filter isLower
 
 flipMap :: Ord b => Map a b -> Map b a
 flipMap = Map.foldrWithKey (\k x -> Map.insert x k) mempty
-
-around :: Point -> [Point]
-around (x,y) = [(x,y-1), (x-1,y), (x+1,y), (x,y+1)]
 
 type CharSet = BitSet Char Word32
 

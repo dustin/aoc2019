@@ -13,20 +13,16 @@ import           Data.Maybe      (fromJust, mapMaybe, maybeToList)
 
 import           AoC
 import           Search
+import           TwoD
 import           Vis
 
 type World = Map (Int,Int) Char
-
-type Point = (Int,Int)
 
 getInput :: FilePath -> IO World
 getInput fn = parseGrid id <$> readFile fn -- "input/day20"
 
 displayMap :: World -> String
 displayMap m = drawString m (\p -> Map.findWithDefault ' ' p m)
-
-around :: Point -> [Point]
-around (x,y) = [(x,y-1), (x-1,y), (x+1,y), (x,y+1)]
 
 portalRev :: Map Point PortalID -> Map PortalID [Point]
 portalRev m = Map.fromListWith (<>) [(v,[k]) | (k,v) <- Map.toList m]
