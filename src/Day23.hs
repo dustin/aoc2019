@@ -24,8 +24,8 @@ run prog = send (-1,-1) [(n,(-1,-1)) | n <- [0..49]] newNet
       where (Just p, net') = Map.updateLookupWithKey (const (Just . resumePause [x,y])) addr net
             readQueue = map (\[a,b,c] -> (a,(b,c))) . chunksOf 3 . pausedOuts
 
-part1 :: IO Int
-part1 = snd . head . run <$> getInput
+part1 :: Instructions -> Int
+part1 = snd . head . run
 
-part2 :: IO Int
-part2 = fromJust . findRepeated . fmap snd . run <$> getInput
+part2 :: Instructions -> Int
+part2 = fromJust . findRepeated . fmap snd . run

@@ -9,10 +9,10 @@ import           Test.Tasty.HUnit
 import           Day23
 
 testPart1 :: Assertion
-testPart1 = assertEqual "" 26464 =<< part1
+testPart1 = assertEqual "" 26464 =<< part1 <$> getInput
 
 testPart2 :: Assertion
-testPart2 = assertEqual "" 19544 =<< part2
+testPart2 = assertEqual "" 19544 =<< part2 <$> getInput
 
 tests :: [TestTree]
 tests = [
