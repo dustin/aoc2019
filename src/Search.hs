@@ -13,14 +13,19 @@ Things I use for searching space in AoC.
 {-# LANGUAGE LambdaCase #-}
 
 module Search (dijkstra', dijkstra, resolveDijkstra, binSearch, autoBinSearch, binSearchM,
-               findCycle, findMin, findMax, bfs, bfsOn) where
+               findCycle, findRepeated, findMin, findMax, bfs, bfsOn) where
 
 import           Control.Parallel.Strategies (parList, rseq, using)
 import           Data.Map                    (Map)
 import qualified Data.Map.Strict             as Map
+import           Data.Maybe                  (listToMaybe)
 import qualified Data.PQueue.Min             as Q
 import qualified Data.Set                    as Set
 import qualified Queue                       as Queue
+
+-- | Get the first repeated element.
+findRepeated :: Eq a => [a] -> Maybe a
+findRepeated xs = listToMaybe [a | (a,b) <- zip xs (tail xs), a == b]
 
 -- | Get the position of the start of the first cycle and the cycle length from a list.
 findCycle :: Ord b => (a -> b) -> [a] -> (Int,Int,a)
