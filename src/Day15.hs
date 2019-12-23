@@ -56,7 +56,7 @@ neighbors :: Point -> Excursion [Point]
 neighbors point = do
   BotState{..} <- get
   let p = stateAt Map.! point
-      nps = map (\(d,np) -> (np, runOne p [unDir d])) $ zip [minBound..] [fwd d point | d <- [minBound..]]
+      nps = map (\(d,np) -> (np, resumePause [unDir d] p)) $ zip [minBound..] [fwd d point | d <- [minBound..]]
       chs = map (\(np, Paused{..}) -> (np, ch pausedOuts)) nps
       oks = filter (\(_,x) -> x `elem` [' ', 'O']) chs
   upd nps chs
@@ -71,12 +71,6 @@ neighbors point = do
     ch [1] = ' '
     ch [2] = 'O'
     ch x   = error ("Unexpected input: " <> show x)
-
-runOne :: Paused -> [Int] -> Paused
-runOne p@Paused{..} ins =
-  case resume p ins of
-    Left (NoInput p') -> p'
-    x                 -> error ("Unexpected termination: " <> show x)
 
 runSearch :: Instructions -> (Point -> Excursion Bool) -> Point -> (Maybe [Point], BotState)
 runSearch prog goalf st = runState (go (execute prog)) (BotState (Map.singleton st ' ') mempty)

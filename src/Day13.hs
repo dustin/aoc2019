@@ -80,7 +80,7 @@ playGame progIn = start
 
 
     go gs@(g:_) (Right FinalState{..})        = updGame g outputs : gs
-    go gs@(g:_) (Left (NoInput p@Paused{..})) = go (g':gs) (resume p [s g'])
+    go gs@(g:_) (Left (NoInput p@Paused{..})) = go (g':gs) (resume [s g'] p)
       where g' = updGame g pausedOuts
 
     prog = progIn & ix 0 .~ 2
@@ -144,7 +144,7 @@ hackGame progIn = start
 
     go gs@(g:_) (Right FinalState{..})        = updGame g outputs : gs
     go gs@(g:_) (Left (NoInput p@Paused{..})) = let (ng, np) = hk pausedIns in
-      go (ng:gs) (resume p{pausedIns=np} [0])
+      go (ng:gs) (resume [0] p{pausedIns=np})
 
       where g' = updGame g pausedOuts
             hk :: Pages -> (Game, Pages)

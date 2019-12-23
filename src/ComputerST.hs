@@ -3,7 +3,7 @@
 module ComputerST (execute, executeWithin, executeWithinIns, executeIn, readInstructions,
                    Instructions, Termination(..),
                    executeWithinST, VMState(..), Op, Mode(..),
-                   rd, wr, FinalState(..), Paused(..), resume) where
+                   rd, wr, FinalState(..), Paused(..), resume, executePause, resumePause) where
 
 import           Control.Monad.ST
 import           Data.Map.Strict             (Map)
@@ -194,9 +194,21 @@ executeWithinIns limit invals ins = runST $ do
 executeIn :: [Int] -> Instructions -> Either Termination FinalState
 executeIn = executeWithinIns 100000
 
+paused :: Either Termination FinalState -> Paused
+paused (Left (NoInput p)) = p
+paused x = error ("Expected pause, got termination: " <> show x)
+
+-- Execute and assume we'll pause.
+executePause :: [Int] -> Instructions -> Paused
+executePause ins = paused . executeIn ins
+
+-- Resume and assume we'll be paused again.
+resumePause :: [Int] -> Paused -> Paused
+resumePause ins = paused . resume ins
+
 -- Resume a paused VM.
-resume :: Paused -> [Int] -> Either Termination FinalState
-resume p ins = runST $ do
+resume :: [Int] -> Paused -> Either Termination FinalState
+resume ins p = runST $ do
   vms <- fromPaused ins p
   either (pure . Left) (pure . Right) =<< executeWithinST 1000000 vms
 
