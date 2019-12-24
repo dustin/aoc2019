@@ -3,8 +3,9 @@
 
 module Day24 where
 
-import           Data.Map.Strict (Map)
+import           Data.Foldable   (foldMap)
 import qualified Data.Map.Strict as Map
+import           Data.Set        (Set)
 import qualified Data.Set        as Set
 
 import           AoC
@@ -12,46 +13,42 @@ import           Search
 import           TwoD
 import           Vis
 
-type World = Map Point Char
+type World = Set Point
 
 getInput :: FilePath -> IO World
-getInput fp = parseGrid id <$> readFile fp
+getInput fp = Map.keysSet . Map.filter (== '#') . parseGrid id <$> readFile fp
 
-adjacency :: Ord k => (k -> [k]) -> Map k Char -> k -> Int
-adjacency arnd m = length . filter (== '#') . map (\p' -> Map.findWithDefault '.' p' m) . arnd
+adjacency :: Ord k => (k -> [k]) -> Set k -> k -> Int
+adjacency arnd m = length . filter (`Set.member` m) . arnd
 
-bugs :: Map k Char -> [k]
-bugs = Map.keys . Map.filter (== '#')
+spaces :: Ord k => (k -> [k]) -> Set k -> Set k
+spaces arnd m = (`Set.difference` m) . foldMap (Set.fromList . arnd) $ m
 
-spaces :: Ord k => (k -> [k]) -> Map k Char -> [k]
-spaces arnd m = Set.toList . Set.fromList . filter (\p -> Map.lookup p m /= Just '#') . concatMap arnd . bugs $ m
-
-automata :: Ord k => (k -> [k]) -> Map k Char -> Map k Char
-automata arnd m = Map.filter (/= ' ') . Map.unions $ [frombugs, fromspaces, m]
+automata :: Ord k => (k -> [k]) -> Set k -> Set k
+automata arnd m = Set.union frombugs fromspaces
   where
     adjc k = adjacency arnd m k
-    frombugs = Map.fromList [(k, if adjc k == 1 then '#' else '.') | k <- bugs m]
-    fromspaces = Map.fromList [(k, '#')| k <- spaces arnd m, shouldSpace k]
-    shouldSpace k = adjc k `elem` [1,2]
+    frombugs = Set.filter (\k -> adjc k == 1) $ m
+    fromspaces = Set.filter (\k -> adjc k `elem` [1,2]) . spaces arnd $ m
 
 displayWorld :: World -> IO ()
-displayWorld m = putStrLn $ drawString m (\p -> Map.findWithDefault '.' p m)
+displayWorld s = putStrLn $ drawString m (\p -> Map.findWithDefault '.' p m)
+  where m = Map.fromList [(k,'#') | k <- Set.toList s]
 
 part1 :: World -> Int
 part1 m = let (_,_,m') = findCycle id (iterate (automata arnd) m) in
             bioDiv m'
   where
-    arnd = filter (`Map.member` m) . around
-    ((mnx,mny),(mxx,mxy)) = bounds2d m
+    arnd = filter (\(x,y) -> x `elem` [0..4] && y `elem` [0..4]) . around
 
-    bmap = Map.fromList $ zip [(x,y) | y <- [mny..mxy], x <- [mnx..mxx]] [2^x | x <- [0::Int ..]]
-    bioDiv = sum . map ((bmap Map.!) . fst) . filter ((== '#') . snd) . Map.toList
+    bmap = Map.fromList $ zip [(x,y) | y <- [0..4], x <- [0..4]] [2^x | x <- [0::Int ..]]
+    bioDiv = sum . map ((bmap Map.!)) . Set.toList
 
 type Point3 = (Int,Int,Int)
-type World3 = Map Point3 Char
+type World3 = Set Point3
 
 upgrade :: World -> World3
-upgrade = Map.fromList . map (\((x,y),c) -> ((x,y,0),c)) . Map.toList
+upgrade = Set.map (\(x,y) -> (x,y,0))
 
 up :: Point3 -> [Point3]
 up (_,0,z) = [(2,1,z-1)]
@@ -76,15 +73,15 @@ down (x,y,z) = [(x,y+1,z)]
 around3 :: Point3 -> [Point3]
 around3 p = mconcat [up p, left p, right p, down p]
 
-depths :: World3 -> [Int]
-depths = Set.toList . Set.fromList . map thrd . Map.keys
+depths :: World3 -> Set Int
+depths = Set.map thrd
 
 displayWorld3 :: World3 -> IO ()
 displayWorld3 m3 = mapM_ (\l -> putStrLn ("Level " <> show l) >> displayWorld (downgrade l)) $ depths m3
-  where downgrade l = Map.fromList . map (\((x,y,_),c) -> ((x,y),c)) . filter ((== l) . thrd . fst) . Map.toList $ m3
+  where downgrade l = Set.map (\(x,y,_) -> (x,y)) . Set.filter ((== l) . thrd) $ m3
 
 part2 :: Int -> World -> Int
 part2 mins m = let m3 = upgrade m
                    gens = iterate (automata around3) m3
                    fstate = gens !! mins
-               in length . bugs $ fstate
+               in length fstate

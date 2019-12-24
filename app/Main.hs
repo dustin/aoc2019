@@ -2,9 +2,7 @@
 
 module Main where
 
-import           Day22
+import           Day24
 
 main :: IO ()
-main = do
-  _ <- part2
-  pure ()
+main = print =<< part2 200 <$> getInput "input/day24"
