@@ -61,7 +61,7 @@ dijk m = dijkstra nf start isDone
     km = k2k m
     isDone (_,x,_) = BitSet.null x
     nf (ps, w, h) = map (\(op,(np,_,c,ps')) -> (length ps', (adjps op np ps, BitSet.delete c w, BitSet.insert c h))) $
-                    concatMap (\p -> zip (repeat p) (possible p h km)) ps
+                    foldMap (\p -> zip (repeat p) (possible p h km)) ps
       where adjps op np = Set.insert np . Set.delete op
 
 numberStarts :: World -> World
@@ -76,9 +76,9 @@ graphviz :: World -> String
 graphviz w = "digraph g {\n" <>  unlines (nodes <> ["  " <> show [s] <> " -> " <> show [d]  | (s,d) <- links]) <> "\n}\n"
   where km = k2k w
         w' = numberStarts w
-        links = Set.toList . Set.fromList . concatMap each $ Map.toList km
+        links = Set.toList . Set.fromList . foldMap each $ Map.toList km
         nodes = [ "  " <> show [n] <> " [shape=box]" | n <- Map.elems . Map.filter isUpper $ w' ]
-        each (p, m) = concatMap dst $ Map.elems m
+        each (p, m) = foldMap dst $ Map.elems m
           where t = w' Map.! p
                 dst (_, drs, c, _)
                   | BitSet.null drs = [(t,c)]
@@ -91,7 +91,7 @@ graphviz' w = "graph g {\n" <> unlines [each k | k@(a,_) <- pairs, a /= '@'] <> 
   where w' = numberStarts w
         km = k2k w'
         pairs :: [(Char,Char)]
-        pairs = Map.toList . Map.fromList . concatMap (\(k,dm) -> [mm (w' Map.! k) x | x <- Map.keys dm]) $ Map.toList km
+        pairs = Map.toList . Map.fromList . foldMap (\(k,dm) -> [mm (w' Map.! k) x | x <- Map.keys dm]) $ Map.toList km
           where mm a b = (min a b, max a b)
         each (a, b) = "  " <> show a <> " -- " <> show b
 
