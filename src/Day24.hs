@@ -72,7 +72,7 @@ down (2,1,z) = [(x,0,z+1) | x <- [0..4]]
 down (x,y,z) = [(x,y+1,z)]
 
 around3 :: Point3 -> [Point3]
-around3 p = mconcat [up p, left p, right p, down p]
+around3 p = foldMap ($ p) [up, left, right, down]
 
 depths :: World3 -> Set Int
 depths = Set.map thrd
