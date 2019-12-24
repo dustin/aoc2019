@@ -52,16 +52,17 @@ type Dest = (Point, CharSet, Char, [Point])
 
 type KeysGraph = Map Point (Map Char Dest)
 
-type DState = (Set Point, CharSet, CharSet)
+type DState = (Set Point, CharSet)
 
 dijk :: World -> Maybe (Int, [DState])
 dijk m = dijkstra nf start isDone
   where
-    start = (Set.fromList $ entrances m, (BitSet.fromList ('a', 'z') . Map.elems $ keys m), emptyCharSet)
+    start = (Set.fromList $ entrances m, emptyCharSet)
     km = k2k m
-    isDone (_,x,_) = BitSet.null x
-    nf (ps, w, h) = map (\(op,(np,_,c,ps')) -> (length ps', (adjps op np ps, BitSet.delete c w, BitSet.insert c h))) $
-                    foldMap (\p -> zip (repeat p) (possible p h km)) ps
+    allKeys = BitSet.fromList ('a', 'z') . Map.elems $ keys m
+    isDone (_,x) = x == allKeys
+    nf (ps, h) = map (\(op,(np,_,c,ps')) -> (length ps', (adjps op np ps, BitSet.insert c h))) $
+                 foldMap (\p -> zip (repeat p) (possible p h km)) ps
       where adjps op np = Set.insert np . Set.delete op
 
 numberStarts :: World -> World
