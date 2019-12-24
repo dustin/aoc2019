@@ -27,31 +27,24 @@ spaces :: Ord k => (k -> [k]) -> Map k Char -> [k]
 spaces arnd m = Set.toList . Set.fromList . filter (\p -> Map.lookup p m /= Just '#') . concatMap arnd . bugs $ m
 
 automata :: Ord k => (k -> [k]) -> Map k Char -> Map k Char
-automata arnd m = Map.unions [frombugs, fromspaces, m]
+automata arnd m = Map.filter (/= ' ') . Map.unions $ [frombugs, fromspaces, m]
   where
     adjc k = adjacency arnd m k
     frombugs = Map.fromList [(k, if adjc k == 1 then '#' else '.') | k <- bugs m]
     fromspaces = Map.fromList [(k, '#')| k <- spaces arnd m, shouldSpace k]
-    shouldSpace k = Map.lookup k m == Just '.' && adjc k `elem` [1,2]
-
-automata3 :: Ord k => (k -> [k]) -> Map k Char -> Map k Char
-automata3 arnd m = Map.union frombugs fromspaces
-  where
-    adjc k = adjacency arnd m k
-    frombugs = Map.fromList [(k, if adjc k == 1 then '#' else '.') | k <- bugs m]
-    fromspaces = Map.fromList [(k, '#')| k <- spaces arnd m, shouldSpace k]
-    shouldSpace k = Map.lookup k m /= Just '#' && adjc k `elem` [1,2]
+    shouldSpace k = adjc k `elem` [1,2]
 
 displayWorld :: World -> IO ()
 displayWorld m = putStrLn $ drawString m (\p -> Map.findWithDefault '.' p m)
 
 part1 :: World -> Int
-part1 m = let (_,_,m') = findCycle id (iterate (automata around) m) in
+part1 m = let (_,_,m') = findCycle id (iterate (automata arnd) m) in
             bioDiv m'
   where
+    arnd = filter (`Map.member` m) . around
     ((mnx,mny),(mxx,mxy)) = bounds2d m
 
-    bmap = Map.fromList $ zip [(x,y) | y <- [mny..mxy], x <- [mnx..mxx]] [2^x | x <- [0..]]
+    bmap = Map.fromList $ zip [(x,y) | y <- [mny..mxy], x <- [mnx..mxx]] [2^x | x <- [0::Int ..]]
     bioDiv = sum . map ((bmap Map.!) . fst) . filter ((== '#') . snd) . Map.toList
 
 type Point3 = (Int,Int,Int)
@@ -92,6 +85,6 @@ displayWorld3 m3 = mapM_ (\l -> putStrLn ("Level " <> show l) >> displayWorld (d
 
 part2 :: Int -> World -> Int
 part2 mins m = let m3 = upgrade m
-                   gens = iterate (automata3 around3) m3
+                   gens = iterate (automata around3) m3
                    fstate = gens !! mins
                in length . bugs $ fstate
