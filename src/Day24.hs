@@ -18,6 +18,7 @@ type World = Set Point
 getInput :: FilePath -> IO World
 getInput fp = Map.keysSet . Map.filter (== '#') . parseGrid id <$> readFile fp
 
+-- Number of nearby bugs
 adjacency :: Ord k => (k -> [k]) -> Set k -> k -> Int
 adjacency arnd m = length . filter (`Set.member` m) . arnd
 
@@ -81,7 +82,7 @@ displayWorld3 m3 = mapM_ (\l -> putStrLn ("Level " <> show l) >> displayWorld (d
   where downgrade l = Set.map (\(x,y,_) -> (x,y)) . Set.filter ((== l) . thrd) $ m3
 
 part2 :: Int -> World -> Int
-part2 mins m = let m3 = upgrade m
-                   gens = iterate (automata around3) m3
-                   fstate = gens !! mins
-               in length fstate
+part2 mins = part2' mins . upgrade
+
+part2' :: Int -> World3 -> Int
+part2' mins m3 = length $ (iterate (automata around3) m3 !! mins)

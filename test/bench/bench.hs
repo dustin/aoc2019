@@ -8,6 +8,7 @@ import           Day10Bench
 import           Day15Bench
 import           Day16Bench
 import           Day23Bench
+import           Day24Bench
 import           Day4Bench
 
 main :: IO ()
@@ -17,5 +18,6 @@ main = defaultMain [
   bgroup "day10" Day10Bench.tests,
   bgroup "day15" Day15Bench.tests,
   bgroup "day16" Day16Bench.tests,
-  bgroup "day23" Day23Bench.tests
+  bgroup "day23" Day23Bench.tests,
+  bgroup "day24" Day24Bench.tests
   ]
