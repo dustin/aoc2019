@@ -9,7 +9,7 @@ import           Data.Ix         (Ix (..))
 import           Data.List       (intercalate)
 import           Data.Semigroup  (Semigroup (..))
 
-data BitSet i w = BitSet (i,i) w
+data BitSet i w = BitSet !(i,i) !w
 
 instance Eq w => Eq (BitSet i w) where
   (BitSet _ a) == (BitSet _ b) = a == b

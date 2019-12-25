@@ -2,7 +2,7 @@
 
 module Main where
 
-import           Day18
+import           Day25
 
 main :: IO ()
-main = print =<< part2
+main = part1
