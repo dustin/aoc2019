@@ -6,8 +6,6 @@ module Day25 where
 
 import           Control.Applicative        ((<|>))
 import           Data.Char                  (chr, ord)
-import           Data.List                  (tails)
-
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import qualified Data.Text                  as T
@@ -27,7 +25,8 @@ getInput = readInstructions "input/day25"
 data Room = Room {
   roomName      :: String,
   roomNeighbors :: [Dir],
-  roomItems     :: [String] } deriving Show
+  roomItems     :: [String]
+  } deriving Show
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme space
@@ -71,9 +70,11 @@ data GameState = GameState {
   inv          :: Set String
   }
 
+-- BFS the game state and return the first state where the given predicate is true.
 search :: (GameState -> Bool) -> GameState -> GameState
 search goal = head . filter goal . bfsOn (\GameState{..} -> (roomName currentRoom) <> show inv) neighbors
 
+-- Find all the rooms and get all the things.
 getAllItems :: Instructions -> GameState
 getAllItems prog = search (\GameState{..} -> length inv == 8) initSt
   where
@@ -81,6 +82,10 @@ getAllItems prog = search (\GameState{..} -> length inv == 8) initSt
                  (_, r) = readRoom p
              in GameState r p mempty
 
+-- Find all neighbor states from the given state.
+--
+-- The forward game states include not only entering the room, but
+-- also picking up any items that may be in the room
 neighbors :: GameState -> [GameState]
 neighbors GameState{..} = do
   let procd = map (\d -> let p' = resumePause (cmdStr $ dirString d) currentState
@@ -96,18 +101,23 @@ neighbors GameState{..} = do
     doRoom Room{..} p = let rhas = filter (`notElem` doNotWant) roomItems in
                           (rhas, foldr (\x o -> resumePause (cmdStr ("take " <> x)) o) p rhas)
 
+-- Find the way to a particular room.
 goto :: String -> GameState -> GameState
 goto rm = search (\GameState{..} -> (roomName currentRoom) == rm)
 
+-- Go to the security check point to check weights.
 weighMe :: Instructions -> GameState
 weighMe = goto "Security Checkpoint" . getAllItems
 
+-- Given a game state where from the security checkpoint location with
+-- all items, figure out which items are necessary to proceed south
+-- and return the final game screen.
 brutus :: GameState -> String
 brutus GameState{..} = go todo
   where
     dropAll = foldr (\x o -> resumePause (cmdStr ("drop " <> x)) o) currentState inv
 
-    todo = foldMap (flip combinations (Set.toList inv)) [1..8]
+    todo = Set.toList $ Set.powerSet inv
 
     go [] = error "noooo"
     go (x:xs) = case resume (cmdStr "south") $ foldr (\i o -> resumePause (cmdStr ("take " <> i)) o) dropAll x of
@@ -123,11 +133,6 @@ run p@Paused{pausedOuts} = do
     Left (NoInput p')         -> run p'
     Right FinalState{outputs} -> putStrLn (map chr outputs)
     Left x -> error $ "Some other termination status: " <> show x
-
-combinations :: Int -> [a] -> [[a]]
-combinations 0 _  = [ [] ]
-combinations n xs = [ y:ys | y:xs' <- tails xs
-                           , ys <- combinations (n-1) xs']
 
 part1' :: Instructions -> String
 part1' = brutus . weighMe
