@@ -12,7 +12,7 @@ import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import qualified Data.Text                  as T
 import           Text.Megaparsec            (endBy, manyTill, option, try)
-import           Text.Megaparsec.Char       (char, eol, space, space1, string)
+import           Text.Megaparsec.Char       (char, space, string)
 import qualified Text.Megaparsec.Char.Lexer as L
 
 
@@ -29,27 +29,16 @@ data Room = Room {
   roomNeighbors :: [Dir],
   roomItems     :: [String] } deriving Show
 
-sc :: Parser ()
-sc = L.space space1 lineComment blockComment
-  where
-    lineComment  = L.skipLineComment "//"
-    blockComment = L.skipBlockComment "/*" "*/"
-
 lexeme :: Parser a -> Parser a
-lexeme = L.lexeme sc
+lexeme = L.lexeme space
 
 parseRoom :: Parser Room
 parseRoom = do
-  _ <- space1
-  _ <- manyTill L.charLiteral (string "== ")
-  rname <- manyTill L.charLiteral (string " ==")
-  _ <- space
-  _ <- manyTill L.charLiteral (string "Doors here lead:\n")
-  doors <- door `endBy` "\n"
-  _ <- space
-  items <- option [] (try parseItems)
-  _ <- space
-  _ <- manyTill L.charLiteral eol
+  _ <- lexeme $ manyTill L.charLiteral (string "== ")
+  rname <- lexeme $ manyTill L.charLiteral (string " ==")
+  _ <- lexeme $ manyTill L.charLiteral (string "Doors here lead:\n")
+  doors <- lexeme $ door `endBy` "\n"
+  items <- option [] (try $ lexeme parseItems)
 
   pure (Room rname doors items)
 
@@ -59,9 +48,7 @@ parseRoom = do
            <|> W <$ "- west"
            <|> S <$ "- south"
 
-    parseItems = do
-      _ <- manyTill L.charLiteral (string "Items here:\n")
-      pstr `endBy` "\n"
+    parseItems = manyTill L.charLiteral (string "Items here:\n") *> (pstr `endBy` "\n")
 
     pstr = string "- " *> manyTill L.charLiteral (char '\n')
 
@@ -125,7 +112,7 @@ brutus GameState{..} = go todo
     go [] = error "noooo"
     go (x:xs) = case resume (cmdStr "south") $ foldr (\i o -> resumePause (cmdStr ("take " <> i)) o) dropAll x of
                   Left _                    -> go xs
-                  Right FinalState{outputs} -> putStrLn (map chr outputs)
+                  Right FinalState{outputs} -> putStrLn $ mconcat [show x, "\n", map chr outputs]
 
 -- Play the game interactively.
 run :: Paused -> IO ()
