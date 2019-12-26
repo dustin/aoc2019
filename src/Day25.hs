@@ -102,7 +102,7 @@ goto rm = search (\GameState{..} -> (roomName currentRoom) == rm)
 weighMe :: Instructions -> GameState
 weighMe = goto "Security Checkpoint" . getAllItems
 
-brutus :: GameState -> IO ()
+brutus :: GameState -> String
 brutus GameState{..} = go todo
   where
     dropAll = foldr (\x o -> resumePause (cmdStr ("drop " <> x)) o) currentState inv
@@ -112,7 +112,7 @@ brutus GameState{..} = go todo
     go [] = error "noooo"
     go (x:xs) = case resume (cmdStr "south") $ foldr (\i o -> resumePause (cmdStr ("take " <> i)) o) dropAll x of
                   Left _                    -> go xs
-                  Right FinalState{outputs} -> putStrLn $ mconcat [show x, "\n", map chr outputs]
+                  Right FinalState{outputs} -> mconcat [show x, "\n", map chr outputs]
 
 -- Play the game interactively.
 run :: Paused -> IO ()
@@ -129,7 +129,8 @@ combinations 0 _  = [ [] ]
 combinations n xs = [ y:ys | y:xs' <- tails xs
                            , ys <- combinations (n-1) xs']
 
+part1' :: Instructions -> String
+part1' = brutus . weighMe
+
 part1 :: IO ()
-part1 = do
-  prog <- getInput
-  brutus . weighMe $ prog
+part1 = putStr . part1' =<< getInput
