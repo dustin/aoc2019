@@ -1,7 +1,5 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE TupleSections     #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module Day22 where
@@ -70,7 +68,7 @@ part2 = do
   inp <- getInput "input/day22"
   let (a, b) = reduce inp
       x = offset * powm a deals deckSize 1
-      y = b * ((powm a deals deckSize 1) + deckSize - 1)
+      y = b * (powm a deals deckSize 1 + deckSize - 1)
       z = powm (a - 1) (deckSize - 2) deckSize 1
 
   pure $ mds $ x + (y * z)
@@ -84,6 +82,6 @@ part2 = do
     reduce = foldr deal (1,0)
       where
         deal NewStack      (a,b) = (mds $ negate a, mds $ negate (b + 1))
-        deal (Cut x)       (a,b) = (a, mds $ (b + fromIntegral x))
+        deal (Cut x)       (a,b) = (a, mds (b + fromIntegral x))
         deal (Increment x) (a,b) = let p = powm (fromIntegral x) (deckSize-2) deckSize 1 in
                                      (mds (a * p), mds (b * p))

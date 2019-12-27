@@ -76,8 +76,8 @@ mkDrawSpec a = DrawSpec{..}
     transX = (mnx +)
     transY = (mny +)
 
-    invTransX = (subtract mnx)
-    invTransY = (subtract mny)
+    invTransX = subtract mnx
+    invTransY = subtract mny
 
 draw :: Bounded2D a => FilePath -> a -> PixelFun -> IO ()
 draw fn o pf = writePng fn (generateImage fromPF width height)
@@ -95,7 +95,7 @@ mapCharFunTrans m l = mapCharFun m (\x -> Map.findWithDefault '?' x cm)
   where cm = Map.fromList l
 
 drawString :: Bounded2D a => a -> CharFun -> String
-drawString a cf = intercalate "\n" (map (\y -> map (\x -> fromPF x y) [0.. width - 1]) [0.. height - 1])
+drawString a cf = intercalate "\n" (map (\y -> map (`fromPF` y) [0.. width - 1]) [0.. height - 1])
   where
     DrawSpec{..} = mkDrawSpec a
     fromPF x y = cf (transX x, transY y)

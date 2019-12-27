@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TupleSections     #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
@@ -81,7 +80,7 @@ findPath2 m = fst <$> dijkstra nf start (== end)
     end = (0, head $ pr Map.! ('Z', 'Z'))
     nf :: (Int,Point) -> [(Int,(Int,Point))]
     nf p = neighbors p <> warp p
-    neighbors (l,p) = fmap (\p' -> (1,(l,p'))) $ filter (\p' -> Map.lookup p' m == Just '.') (around p)
+    neighbors (l,p) = (\p' -> (1,(l,p'))) <$> filter (\p' -> Map.lookup p' m == Just '.') (around p)
     warp (l,p)
       | l == 0 && outside p = []
       | otherwise = case Map.lookup p warps of

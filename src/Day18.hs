@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module Day18 where
@@ -17,7 +16,7 @@ import           Data.Word                   (Word32)
 
 import           AoC
 import           BitSet                      (BitSet)
-import qualified BitSet                      as BitSet
+import qualified BitSet
 import           Search
 import           TwoD
 import           Vis
@@ -40,7 +39,7 @@ keys :: World -> World
 keys = Map.filter isLower
 
 flipMap :: Ord b => Map a b -> Map b a
-flipMap = Map.foldrWithKey (\k x -> Map.insert x k) mempty
+flipMap = Map.foldrWithKey (flip Map.insert) mempty
 
 type CharSet = BitSet Char Word32
 
@@ -105,7 +104,7 @@ showk2k :: Map Point (Map Char Dest) -> IO ()
 showk2k = mapM_ showk . Map.toList
   where
     showk :: (Point, Map Char Dest) -> IO ()
-    showk (p, m) = putStrLn (show p) >> mapM_ showDest (Map.elems m)
+    showk (p, m) = print p >> mapM_ showDest (Map.elems m)
     showDest (dp, ds, c, path) = putStrLn $ mconcat ["\t", show c, "@", show dp,
                                                      " needs: ", BitSet.toList ds,
                                                      " len: ", show (length path)]

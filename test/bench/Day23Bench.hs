@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Day23Bench where
 
 import           Control.DeepSeq (NFData (..))

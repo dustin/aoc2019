@@ -1,7 +1,5 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE TupleSections     #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module Day21 where
@@ -20,7 +18,7 @@ getInput = readInstructions "input/day21"
 
 runOne :: String -> Instructions -> Either String Int
 runOne ins prog = case executeWithinIns 1000000 (fmap ord ins) prog of
-                    Right (FinalState{outputs}) -> parse outputs
+                    Right FinalState{outputs} -> parse outputs
                     Left x -> error ("Unexpected termination: " <> show x)
   where parse oot
           | all (< 128) oot = Left (fmap chr oot)
@@ -83,13 +81,13 @@ toScript = unlines . map show
 evaluate :: Script -> Terrain -> Bool
 evaluate sins sensors = eval sins False False
   where
-    eval [] _ j             = j
-    eval ((AND r J):xs) t j = eval xs t (j && rd r t j)
-    eval ((OR  r J):xs) t j = eval xs t (j || rd r t j)
-    eval ((NOT r J):xs) t j = eval xs t (not (rd r t j))
-    eval ((AND r T):xs) t j = eval xs (j && rd r t j) j
-    eval ((OR  r T):xs) t j = eval xs (j || rd r t j) j
-    eval ((NOT r T):xs) t j = eval xs (not (rd r t j)) j
+    eval [] _ j           = j
+    eval (AND r J:xs) t j = eval xs t (j && rd r t j)
+    eval (OR  r J:xs) t j = eval xs t (j || rd r t j)
+    eval (NOT r J:xs) t j = eval xs t (not (rd r t j))
+    eval (AND r T:xs) t j = eval xs (j && rd r t j) j
+    eval (OR  r T:xs) t j = eval xs (j || rd r t j) j
+    eval (NOT r T:xs) t j = eval xs (not (rd r t j)) j
 
     rd T t _ = t
     rd J _ j = j
@@ -98,7 +96,7 @@ evaluate sins sensors = eval sins False False
 find1 :: [Op]
 find1 = reverse . head . filter goal $ bfs nf []
   where
-    nf x = (\i -> i:x) <$> genStructions
+    nf x = (:x) <$> genStructions
     goal x = lives (reverse x) shouldJump4 shouldNotJump4
 
     genStructions = do

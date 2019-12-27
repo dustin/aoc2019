@@ -24,7 +24,7 @@ part1 = do
       count x = length . filter (== x)
 
 layerMap :: Int -> Int -> String -> Map (Int,Int) Char
-layerMap w h = Map.fromList . zip [((x,y)) | y <- [0.. h - 1], x <- [0.. w - 1]]
+layerMap w h = Map.fromList . zip [(x,y) | y <- [0.. h - 1], x <- [0.. w - 1]]
 
 flatten :: Int -> Int -> String -> String
 flatten w h = foldr (zipWith j) (repeat '2') . chunksOf (w*h)

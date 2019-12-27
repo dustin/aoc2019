@@ -74,12 +74,12 @@ poke k v (Instructions m) = Instructions (M.insert k v m)
 rd :: Integral a => Mode -> a -> a -> Instructions a -> a
 rd Position i _ ram   = rd Immediate (peek i ram) 0 ram
 rd Immediate i _ ram  = peek i ram
-rd Relative i rel ram = peek ((peek i ram)+rel) ram
+rd Relative i rel ram = peek (peek i ram+rel) ram
 
 wr :: Integral a => Mode -> Instructions a -> a -> a -> a -> Instructions a
 wr Position ram dest _ val   = poke (rd Immediate dest 0 ram) val ram
 wr Immediate ram dest _ val  = poke dest val ram
-wr Relative ram dest rel val = poke ((peek dest ram)+rel) val ram
+wr Relative ram dest rel val = poke (peek dest ram+rel) val ram
 
 input :: Integral a => Op a
 input (m1,_,_) vms@VMState{..}

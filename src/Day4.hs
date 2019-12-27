@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Day4 where
 
 import           Control.Applicative (liftA2)
@@ -20,7 +18,7 @@ part1 :: (Int, Int) -> Int
 part1 r = quantity r $ any (> 1)
 
 part2 :: (Int, Int) -> Int
-part2 r = quantity r $ (2 `elem`)
+part2 r = quantity r (2 `elem`)
 
 -- Below does it at compile time.
 

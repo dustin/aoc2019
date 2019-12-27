@@ -61,8 +61,8 @@ dbgSees :: World -> Point -> String
 dbgSees w@(World wm) p@(px,py) = d <> "\n" <> pairs
   where
     seize = sees w p
-    d = display . World $ Map.union (Map.fromList $ map (,'X') $ seize) wm
-    pairs = intercalate "\n" $ (zipWith (\x y -> show x <> " -> " <> show y) seize $ map (\(x,y) -> (x-px, y-py)) $ seize)
+    d = display . World $ Map.union (Map.fromList $ map (,'X') seize) wm
+    pairs = intercalate "\n" (zipWith (\x y -> show x <> " -> " <> show y) seize (map (\(x,y) -> (x-px, y-py)) seize))
 
 best :: World -> (Point,Int)
 best w = maximumOn snd cz

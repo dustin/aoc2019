@@ -94,7 +94,7 @@ findPath prog = fst $ runSearch prog goalf (0,0)
 floodCount :: Point -> World -> Int
 floodCount start wm = maximum . fmap fst $ bfsOn snd nf (0, start)
   where
-    nf (n,ps) = map (\p -> (n+1, p)) . filter (\p -> Map.lookup p wm == Just ' ') $ around ps
+    nf (n,ps) = map (n+1,) . filter (\p -> Map.lookup p wm == Just ' ') $ around ps
 
 
 flood :: Point -> World -> (Int, [[Point]])

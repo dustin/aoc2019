@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module Day16 where
@@ -27,7 +26,7 @@ fft xs = map (\p -> fftAdd (drop (p-1) xs) (rn p patFuns)) $ take (length xs) [1
 
 fftNaive :: [Int] -> [Int]
 fftNaive xs = map (\p -> fftAddNaive xs (rn p basePat)) $ take (length xs) [1..]
-  where fftAddNaive digs pat = (`mod` 10) . abs . sum . zipWith (*) digs $ (cycle pat)
+  where fftAddNaive digs pat = (`mod` 10) . abs . sum . zipWith (*) digs $ cycle pat
         basePat = [0, 1, 0, -1]
         rn n = drop 1 . cycle . concatMap (replicate n)
 
@@ -51,7 +50,7 @@ doPart2 xin = let repd = concat . replicate 10000 $ xin
 
 doPart2ST :: [Int] -> Int
 doPart2ST xin = runST $ do
-  let vin = V.concat . replicate 10000 $ (V.fromList $ fromIntegral <$> xin)
+  let vin = V.concat . replicate 10000 $ V.fromList (fromIntegral <$> xin)
       n = listNum $ take 7 xin
       rest = V.drop n vin
       lastdig = V.last vin
@@ -62,7 +61,7 @@ doPart2ST xin = runST $ do
 
     where
       fftSum :: MV.MVector s Int32 -> Int32 -> ST s ()
-      fftSum mv ld = compute (MV.length mv - 2) ld
+      fftSum mv = compute (MV.length mv - 2)
         where
           compute (-1) _ = pure ()
           compute n c = do

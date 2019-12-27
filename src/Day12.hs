@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections     #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module Day12 where
@@ -70,7 +69,7 @@ posCycles' :: [[Moon]] -> [Int]
 posCycles' ls = parMap rdeepseq axis [fst3, snd3, thrd]
   where
     poses :: [([Int], [Int], [Int])]
-    poses = tr <$> fmap position <$> ls
+    poses = tr . fmap position <$> ls
 
     axis = fc . (<$> poses)
 

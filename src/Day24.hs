@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module Day24 where
@@ -28,8 +27,8 @@ spaces arnd m = (`Set.difference` m) . foldMap (Set.fromList . arnd) $ m
 automata :: Ord k => (k -> [k]) -> Set k -> Set k
 automata arnd m = Set.union frombugs fromspaces
   where
-    adjc k = adjacency arnd m k
-    frombugs = Set.filter (\k -> adjc k == 1) $ m
+    adjc = adjacency arnd m
+    frombugs = Set.filter (\k -> adjc k == 1) m
     fromspaces = Set.filter (\k -> adjc k `elem` [1,2]) . spaces arnd $ m
 
 displayWorld :: World -> IO ()
@@ -43,7 +42,7 @@ part1 m = let (_,_,m') = findCycle id (iterate (automata arnd) m) in
     arnd = filter (\(x,y) -> x `elem` [0..4] && y `elem` [0..4]) . around
 
     bmap = Map.fromList $ zip [(x,y) | y <- [0..4], x <- [0..4]] [2^x | x <- [0::Int ..]]
-    bioDiv = sum . map ((bmap Map.!)) . Set.toList
+    bioDiv = sum . map (bmap Map.!) . Set.toList
 
 type Point3 = (Int,Int,Int)
 type World3 = Set Point3
@@ -85,4 +84,4 @@ part2 :: Int -> World -> Int
 part2 mins = part2' mins . upgrade
 
 part2' :: Int -> World3 -> Int
-part2' mins m3 = length $ (iterate (automata around3) m3 !! mins)
+part2' mins m3 = length (iterate (automata around3) m3 !! mins)

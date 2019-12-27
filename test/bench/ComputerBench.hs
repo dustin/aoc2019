@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module ComputerBench where
 
 import           Control.DeepSeq (NFData (..))

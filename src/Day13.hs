@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE TupleSections     #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module Day13 where
@@ -76,7 +75,7 @@ playGame :: Instructions -> [Game]
 playGame progIn = start
 
   where
-    start = let st@(Left (NoInput Paused{..})) = execute prog in go [(decOut pausedOuts)] st
+    start = let st@(Left (NoInput Paused{..})) = execute prog in go [decOut pausedOuts] st
 
 
     go gs@(g:_) (Right FinalState{..})        = updGame g outputs : gs
@@ -85,7 +84,7 @@ playGame progIn = start
 
     prog = progIn & ix 0 .~ 2
 
-    s g = (f Ball g) - (f Horizontal g)
+    s g = f Ball g - f Horizontal g
     f t (Game m _) = foldr (\((x,_),t') o -> if t == t' then x else o) 0 $ Map.toList m
 
 
@@ -121,8 +120,7 @@ animateGame (g:gs) = do
     drawScore s = setCursorPosition 0 7 >> print s
 
 part2Animated :: IO ()
-part2Animated =do
-  animateGame =<< reverse <$> part2
+part2Animated = animateGame =<< reverse <$> part2
 
 type Pages = [(Int, Instructions)]
 
@@ -139,7 +137,7 @@ hackGame :: Instructions -> [Game]
 hackGame progIn = start
 
   where
-    start = let st@(Left (NoInput Paused{..})) = execute prog in go [(decOut pausedOuts)] st
+    start = let st@(Left (NoInput Paused{..})) = execute prog in go [decOut pausedOuts] st
 
 
     go gs@(g:_) (Right FinalState{..})        = updGame g outputs : gs

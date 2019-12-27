@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module Day17 where
@@ -37,7 +36,7 @@ intersections :: World -> [Point]
 intersections m = [(x,y) | x <- [mnx..mxx], y <- [mny..mxy], is (x,y)]
   where
     ((mnx,mny),(mxx,mxy)) = bounds2d m
-    is c = Map.lookup c m == Just '#' && ((length $ neighbors m c) == 4)
+    is c = Map.lookup c m == Just '#' && (length (neighbors m c) == 4)
 
 startingPoint :: World -> Point
 startingPoint = fst . head . filter ((== '^') . snd) . Map.toList
@@ -107,7 +106,7 @@ part1 = do
   prog <- getInput
   let m = getMap prog
       ints = intersections m
-  pure . sum . map (\(x,y) -> x * y) $ ints
+  pure . sum . map (uncurry (*)) $ ints
 
 part2 :: IO Int
 part2 = do
@@ -115,7 +114,7 @@ part2 = do
   let m = getMap prog
       turt = turtle m
       (a,b,c,d) = compress turt
-      cmdseq = (intercalate "\n" $ [moveStr d, moveStr a, moveStr b, moveStr c, "n"]) <> "\n"
+      cmdseq = intercalate "\n" [moveStr d, moveStr a, moveStr b, moveStr c, "n"] <> "\n"
       prog' = prog & ix 0 .~ 2
       out = executeIn (ord <$> cmdseq) prog'
 

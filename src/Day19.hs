@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module Day19 where
@@ -20,7 +19,7 @@ getInput = readInstructions "input/day19"
 
 runOne :: [Int] -> Instructions -> [Int]
 runOne ins prog = case executeIn ins prog of
-                    Right (FinalState{outputs}) -> outputs
+                    Right FinalState{outputs} -> outputs
                     Left x -> error ("Unexpected termination: " <> show x)
 
 extractOne :: Instructions -> (Int, Int) -> Int

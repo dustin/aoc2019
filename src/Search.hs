@@ -21,7 +21,7 @@ import qualified Data.Map.Strict             as Map
 import           Data.Maybe                  (listToMaybe)
 import qualified Data.PQueue.Min             as Q
 import qualified Data.Set                    as Set
-import qualified Queue                       as Queue
+import qualified Queue
 
 -- | Get the first repeated element.
 findRepeated :: Eq a => [a] -> Maybe a

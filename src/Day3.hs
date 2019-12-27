@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 module Day3 where
 
 import           Control.Applicative        (liftA2, (<|>))

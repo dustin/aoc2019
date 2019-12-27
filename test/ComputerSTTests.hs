@@ -49,7 +49,7 @@ testD5Compares = mm [
     mm :: [(Instructions, Int, Int)] -> Assertion
     mm = mapM_ aProg
     run :: Instructions -> Int -> Int
-    run prog num = (head . outputs . fromRight undefined $ executeIn [num] prog)
+    run prog num = head . outputs . fromRight undefined $ executeIn [num] prog
     aProg :: (Instructions, Int, Int) -> Assertion
     aProg (prog, num, want) = assertEqual (show prog <> "@" <> show num) want (run prog num)
     ex1 :: Instructions
@@ -71,7 +71,7 @@ testD5Jumps = mm [
     mm :: [(Instructions, Int, Int)] -> Assertion
     mm = mapM_ aProg
     run :: Instructions -> Int -> Int
-    run prog num = (head . outputs . fromRight undefined $ executeIn [num] prog)
+    run prog num = head . outputs . fromRight undefined $ executeIn [num] prog
     aProg :: (Instructions, Int, Int) -> Assertion
     aProg (prog, num, want) = assertEqual (show prog <> "@" <> show num) want (run prog num)
     ex1 :: Instructions

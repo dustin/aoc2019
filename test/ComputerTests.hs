@@ -37,7 +37,7 @@ testD5ex1L = assertEqual "" [5150] $ lrun d5ex [5150]
     lrun prog ins = outputs . fromRight undefined . executeIn ins $ prog
 
 testD5ex2 :: Assertion
-testD5ex2 = assertEqual "" ([1002,4,3,4,99]) (ram . fromRight undefined $ execute d5ex2)
+testD5ex2 = assertEqual "" [1002,4,3,4,99] (ram . fromRight undefined $ execute d5ex2)
 
 testD5Compares :: Assertion
 testD5Compares = mm [
@@ -50,7 +50,7 @@ testD5Compares = mm [
     mm :: [(Instructions Int, Int, Int)] -> Assertion
     mm = mapM_ aProg
     run :: Instructions Int -> Int -> Int
-    run prog num = (head . outputs . fromRight undefined $ executeIn [num] prog)
+    run prog num = head . outputs . fromRight undefined $ executeIn [num] prog
     aProg :: (Instructions Int, Int, Int) -> Assertion
     aProg (prog, num, want) = assertEqual (show prog <> "@" <> show num) want (run prog num)
     ex1 :: Instructions Int
@@ -72,7 +72,7 @@ testD5Jumps = mm [
     mm :: [(Instructions Int, Int, Int)] -> Assertion
     mm = mapM_ aProg
     run :: Instructions Int -> Int -> Int
-    run prog num = (head . outputs . fromRight undefined $ executeIn [num] prog)
+    run prog num = head . outputs . fromRight undefined $ executeIn [num] prog
     aProg :: (Instructions Int, Int, Int) -> Assertion
     aProg (prog, num, want) = assertEqual (show prog <> "@" <> show num) want (run prog num)
     ex1 :: Instructions Int
