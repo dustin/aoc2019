@@ -22,7 +22,6 @@ dependencies:
 - base >= 4.7 && < 5
 - containers
 - vector
-- edit-distance
 - text
 - deepseq
 - time
@@ -32,20 +31,14 @@ dependencies:
 - array
 - JuicyPixels
 - megaparsec
-- pqueue
 - lens
 - template-haskell
 - ghc-prim
-- doctest
 - vector-split
 - ansi-terminal
-- optics
-- linear
 - astar
 - mtl
 - unordered-containers
-- async
-- fgl
 - aoc
 
 library:

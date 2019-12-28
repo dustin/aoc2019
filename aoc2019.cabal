@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8d1f195d64b795850401eeefefd4686cac45b6d4770cbd94c61c8e5f0290ef9f
+-- hash: 3e874b0a1cda89c6ec328a5bb1934c75f12f19537f31f45fc57ee2503dcaec3d
 
 name:           aoc2019
 version:        0.1.0.0
@@ -66,22 +66,15 @@ library
     , aoc
     , array
     , astar
-    , async
     , base >=4.7 && <5
     , containers
     , deepseq
-    , doctest
-    , edit-distance
     , extra
-    , fgl
     , ghc-prim
     , lens
-    , linear
     , megaparsec
     , mtl
-    , optics
     , parallel
-    , pqueue
     , template-haskell
     , text
     , time
@@ -106,22 +99,15 @@ executable aoc
     , aoc2019
     , array
     , astar
-    , async
     , base >=4.7 && <5
     , containers
     , deepseq
-    , doctest
-    , edit-distance
     , extra
-    , fgl
     , ghc-prim
     , lens
-    , linear
     , megaparsec
     , mtl
-    , optics
     , parallel
-    , pqueue
     , template-haskell
     , text
     , time
@@ -177,22 +163,15 @@ test-suite aoc-test
     , aoc2019
     , array
     , astar
-    , async
     , base >=4.7 && <5
     , containers
     , deepseq
-    , doctest
-    , edit-distance
     , extra
-    , fgl
     , ghc-prim
     , lens
-    , linear
     , megaparsec
     , mtl
-    , optics
     , parallel
-    , pqueue
     , tasty
     , tasty-golden
     , tasty-hunit
@@ -230,23 +209,16 @@ benchmark aoc-bench
     , aoc2019
     , array
     , astar
-    , async
     , base >=4.7 && <5
     , containers
     , criterion
     , deepseq
-    , doctest
-    , edit-distance
     , extra
-    , fgl
     , ghc-prim
     , lens
-    , linear
     , megaparsec
     , mtl
-    , optics
     , parallel
-    , pqueue
     , template-haskell
     , text
     , time
