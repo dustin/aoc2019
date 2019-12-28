@@ -9,7 +9,7 @@ import           Data.Maybe      (fromJust)
 import           ComputerST      (Instructions, Paused (..), executePause,
                                   readInstructions, resumePause)
 
-import           Search          (findRepeated)
+import           Advent.Search   (findRepeated)
 
 getInput :: IO Instructions
 getInput = readInstructions "input/day23"

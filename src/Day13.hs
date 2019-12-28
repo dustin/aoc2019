@@ -17,11 +17,11 @@ import           Control.Concurrent  (threadDelay)
 import           System.Console.ANSI
 import           System.IO           (hFlush, stdout)
 
+import           Advent.TwoD
+import           Advent.Vis
 import           ComputerST          (FinalState (..), Instructions,
                                       Paused (..), Termination (..), execute,
                                       readInstructions, resume)
-import           TwoD
-import           Vis
 
 getInput :: IO Instructions
 getInput = readInstructions "input/day13"

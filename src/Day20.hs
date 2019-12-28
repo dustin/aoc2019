@@ -10,10 +10,10 @@ import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe      (fromJust, mapMaybe, maybeToList)
 
-import           AoC
-import           Search
-import           TwoD
-import           Vis
+import           Advent.AoC
+import           Advent.Search
+import           Advent.TwoD
+import           Advent.Vis
 
 type World = Map (Int,Int) Char
 

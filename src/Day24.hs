@@ -7,10 +7,10 @@ import qualified Data.Map.Strict as Map
 import           Data.Set        (Set)
 import qualified Data.Set        as Set
 
-import           AoC
-import           Search
-import           TwoD
-import           Vis
+import           Advent.AoC
+import           Advent.Search
+import           Advent.TwoD
+import           Advent.Vis
 
 type World = Set Point
 

@@ -6,10 +6,10 @@ module Day11 where
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 
-import           AoC
+import           Advent.AoC
+import           Advent.TwoD
+import           Advent.Vis
 import           ComputerST
-import           TwoD
-import           Vis
 
 getInput :: IO Instructions
 getInput = readInstructions "input/day11"

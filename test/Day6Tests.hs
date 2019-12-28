@@ -11,7 +11,7 @@ import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck as QC
 
 
-import           AoC
+import           Advent.AoC
 import           Day6
 
 getExample :: IO OMap

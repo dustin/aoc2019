@@ -46,6 +46,8 @@ extra-deps:
 - optics-th-0.2@sha256:b4f6c5a3f134c697837190ed6da969dd284aefe79e43c3ef793093b607bb83b9,1929
 - indexed-profunctors-0.1@sha256:ddf618d0d4c58319c1e735e746bc69a1021f13b6f475dc9614b80af03432e6d4,1016
 - astar-0.3.0.0@sha256:8bf6350542e9db9451490e8993560ee843dc48a61d46a206985430f9b62461c8,967
+- git: https://github.com/dustin/aoc.git
+  commit: b5745a067b077c6bfa99a4aa81bbd513e010f731
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

@@ -10,8 +10,8 @@ import           Text.Megaparsec             (endBy)
 import           Text.Megaparsec.Char        (space, string)
 import           Text.Megaparsec.Char.Lexer  (decimal, signed)
 
-import           AoC
-import           Search
+import           Advent.AoC
+import           Advent.Search
 
 data Moon = Moon {
   position :: (Int, Int, Int),

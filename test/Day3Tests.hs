@@ -10,7 +10,7 @@ import           Test.Tasty.Golden
 import           Test.Tasty.HUnit
 import           Test.Tasty.QuickCheck as QC
 
-import           AoC
+import           Advent.AoC
 import           Day3
 
 parseEx :: Text -> [Wire]

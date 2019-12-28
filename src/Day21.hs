@@ -4,14 +4,14 @@
 
 module Day21 where
 
-import           Data.Bits  (shiftL, shiftR, testBit, (.&.), (.|.))
-import           Data.Char  (chr, ord)
-import           Data.Word  (Word8)
+import           Data.Bits     (shiftL, shiftR, testBit, (.&.), (.|.))
+import           Data.Char     (chr, ord)
+import           Data.Word     (Word8)
 
-import           ComputerST (FinalState (..), Instructions, executeWithinIns,
-                             readInstructions)
+import           ComputerST    (FinalState (..), Instructions, executeWithinIns,
+                                readInstructions)
 
-import           Search
+import           Advent.Search
 
 getInput :: IO Instructions
 getInput = readInstructions "input/day21"

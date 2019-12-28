@@ -6,8 +6,8 @@ import qualified Data.Map.Strict            as Map
 import           Text.Megaparsec            (endBy, sepBy)
 import           Text.Megaparsec.Char.Lexer (decimal)
 
-import           AoC                        (Parser, mdist2, parseFile)
-import           Vis
+import           Advent.AoC                 (Parser, mdist2, parseFile)
+import           Advent.Vis
 
 data Dir = R | D | U | L deriving(Show)
 

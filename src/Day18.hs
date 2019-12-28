@@ -14,12 +14,12 @@ import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
 import           Data.Word                   (Word32)
 
-import           AoC
-import           BitSet                      (BitSet)
-import qualified BitSet
-import           Search
-import           TwoD
-import           Vis
+import           Advent.AoC
+import           Advent.BitSet               (BitSet)
+import qualified Advent.BitSet               as BitSet
+import           Advent.Search
+import           Advent.TwoD
+import           Advent.Vis
 
 type World = Map (Int,Int) Char
 

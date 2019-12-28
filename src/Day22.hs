@@ -13,7 +13,7 @@ import           Text.Megaparsec            (endBy)
 import           Text.Megaparsec.Char       (space, string)
 import           Text.Megaparsec.Char.Lexer (decimal, signed)
 
-import           AoC
+import           Advent.AoC
 
 data Deal = NewStack | Cut Int | Increment Int deriving Show
 

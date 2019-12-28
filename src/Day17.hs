@@ -13,10 +13,10 @@ import           Data.List.Extra (replace)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 
-import           AoC
+import           Advent.AoC
+import           Advent.TwoD
+import           Advent.Vis
 import           ComputerST
-import           TwoD
-import           Vis
 
 type World = Map Point Char
 

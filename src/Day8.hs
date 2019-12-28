@@ -6,7 +6,7 @@ import           Data.List.Extra (chunksOf, minimumOn)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 
-import           Vis
+import           Advent.Vis
 
 getInput :: IO String
 getInput = filter (/= '\n') <$> readFile "input/day8"

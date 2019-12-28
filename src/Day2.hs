@@ -5,8 +5,8 @@ import           Control.Parallel.Strategies (parMap, rdeepseq)
 import           Data.Either                 (fromRight)
 import qualified Data.Map.Strict             as Map
 
+import           Advent.Search
 import           Computer
-import           Search
 
 getInput :: IO (Instructions Int)
 getInput = readInstructions "input/day2"

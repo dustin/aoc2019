@@ -10,9 +10,9 @@ import qualified Data.Map.Strict             as Map
 import           Data.Maybe                  (fromMaybe, listToMaybe)
 import           Data.Monoid                 (Sum (..))
 
+import           Advent.Search
+import           Advent.Vis
 import           ComputerST
-import           Search
-import           Vis
 
 getInput :: IO Instructions
 getInput = readInstructions "input/day19"

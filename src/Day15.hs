@@ -16,10 +16,10 @@ import           Data.Maybe          (fromMaybe)
 import           System.Console.ANSI
 import           System.IO           (hFlush, stdout)
 
+import           Advent.Search
+import           Advent.TwoD         (Dir (..), Point, around)
+import           Advent.Vis
 import           ComputerST
-import           Search
-import           TwoD                (Dir (..), Point, around)
-import           Vis
 
 unDir :: Dir -> Int
 unDir N = 1

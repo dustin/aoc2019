@@ -1,4 +1,4 @@
-name:                aoc
+name:                aoc2019
 version:             0.1.0.0
 github:              "dustin/aoc"
 license:             BSD3
@@ -46,6 +46,7 @@ dependencies:
 - unordered-containers
 - async
 - fgl
+- aoc
 
 library:
   source-dirs: src
@@ -67,7 +68,7 @@ executables:
       - -with-rtsopts=-N
       - -Wall
     dependencies:
-    - aoc
+    - aoc2019
 
 tests:
   aoc-test:
@@ -79,7 +80,7 @@ tests:
     - -eventlog
     - -with-rtsopts=-N
     dependencies:
-    - aoc
+    - aoc2019
     - HUnit
     - tasty
     - tasty-hunit
@@ -90,7 +91,7 @@ tests:
 benchmarks:
   aoc-bench:
     dependencies:
-    - aoc
+    - aoc2019
     - criterion
     - deepseq
     ghc-options:

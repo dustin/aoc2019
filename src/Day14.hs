@@ -11,8 +11,8 @@ import           Data.Text                  (Text, pack)
 import           Text.Megaparsec            (endBy, satisfy, sepBy, some)
 import           Text.Megaparsec.Char.Lexer (decimal)
 
-import           AoC
-import           Search
+import           Advent.AoC
+import           Advent.Search
 
 data Thing = Thing {
   thingMakes :: Int,

@@ -2,8 +2,6 @@
 
 import           Test.Tasty
 
-import qualified AoCTests
-import qualified BitSetTests
 import qualified ComputerSTTests
 import qualified ComputerTests
 import qualified Day10Tests
@@ -32,15 +30,9 @@ import qualified Day7Tests
 import qualified Day8Tests
 import qualified Day9Tests
 import qualified OKComputerTests
-import qualified SearchTests
-import qualified VisTests
 
 tests :: [TestTree]
 tests = [
-  testGroup "aoc" AoCTests.tests,
-  testGroup "search" SearchTests.tests,
-  testGroup "bitset" BitSetTests.tests,
-  testGroup "vis" VisTests.tests,
   testGroup "OK computer" OKComputerTests.tests,
   testGroup "computer" ComputerTests.tests,
   testGroup "computer ST" ComputerSTTests.tests,

@@ -15,10 +15,10 @@ import           Text.Megaparsec.Char        (char, space, string)
 import qualified Text.Megaparsec.Char.Lexer  as L
 
 
-import           AoC
+import           Advent.AoC
+import           Advent.Search
+import           Advent.TwoD
 import           ComputerST
-import           Search
-import           TwoD
 
 getInput :: IO Instructions
 getInput = readInstructions "input/day25"

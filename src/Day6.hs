@@ -11,8 +11,8 @@ import           Text.Megaparsec      (endBy, many, sepBy)
 import           Text.Megaparsec.Char (alphaNumChar)
 
 
-import           AoC
-import           Search
+import           Advent.AoC
+import           Advent.Search
 
 type Orbit = (Text, Text)
 

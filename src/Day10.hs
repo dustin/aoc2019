@@ -9,9 +9,9 @@ import           Data.List.Extra             (maximumOn)
 import           Data.Map.Strict             (Map)
 import qualified Data.Map.Strict             as Map
 
-import           AoC
-import           TwoD
-import           Vis
+import           Advent.AoC
+import           Advent.TwoD
+import           Advent.Vis
 
 newtype World = World (Map Point Char) deriving (Show)
 
