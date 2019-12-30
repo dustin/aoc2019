@@ -18,6 +18,7 @@ data Operation = OpAdd
                | OpHalt
                deriving (Show, Eq, Bounded, Enum)
 
+{-# INLINE opLen #-}
 opLen :: Operation -> Int
 opLen OpAdd    = 4
 opLen OpMul    = 4
@@ -30,17 +31,20 @@ opLen OpJF     = 3
 opLen OpSetrel = 2
 opLen OpHalt   = 1
 
+{-# INLINE amode #-}
 amode :: Int -> Mode
 amode 0 = Position
 amode 1 = Immediate
 amode 2 = Relative
 amode x = error ("invalid mode: " <> show x)
 
+{-# INLINE idOP #-}
 idOP :: Int -> Operation
 idOP x
   | x > fromEnum (maxBound::Operation) = OpHalt
   | otherwise = toEnum (x - 1)
 
+{-# INLINE decodeInstruction #-}
 decodeInstruction :: Integral a => a -> (Operation, Modes)
 decodeInstruction xin = (idOP (x `mod` 100), modes x)
   where

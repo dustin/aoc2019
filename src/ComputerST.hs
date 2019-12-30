@@ -119,26 +119,31 @@ output (m,_,_) vms@VMState{..} = do
   val <- rd m (pc + 1) relBase pages
   pure (Right vms{pc=pc + 2, vout=vout<>[val]})
 
+{-# INLINE opjt #-}
 opjt :: Op s
 opjt (m1,m2,_) vms@VMState{..} = do
   val <- rd m1 (pc + 1) relBase pages
   dest <- rd m2 (pc + 2) relBase pages
   pure (Right vms{pc=if val /= 0 then dest else  pc + 3})
 
+{-# INLINE opjf #-}
 opjf :: Op s
 opjf (m1,m2,_) vms@VMState{..} = do
   val <- rd m1 (pc + 1) relBase pages
   dest <- rd m2 (pc + 2) relBase pages
   pure (Right vms{pc=if val == 0 then dest else pc + 3})
 
+{-# INLINE cmpfun #-}
 cmpfun :: (Int -> Int -> Bool) -> Op s
 cmpfun f = op4 (\a b -> if f a b then 1 else 0)
 
+{-# INLINE setrel #-}
 setrel :: Op s
 setrel (m1,_,_) vms@VMState{..} = do
   v <- rd m1 (pc+1) relBase pages
   pure $ Right vms{pc=pc+2, relBase=relBase + v}
 
+{-# INLINE runOp #-}
 runOp :: Operation -> Op s
 runOp OpAdd    = op4 (+)
 runOp OpMul    = op4 (*)
