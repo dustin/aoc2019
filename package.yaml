@@ -45,6 +45,8 @@ library:
   source-dirs: src
   ghc-options:
     - -Wall
+    - -O2
+    - -fspecialise-aggressively
 
 default-extensions:
   - OverloadedStrings
@@ -56,6 +58,7 @@ executables:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
+      - -O2
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
@@ -68,6 +71,7 @@ tests:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
+    - -O2
     - -threaded
     - -rtsopts
     - -eventlog
@@ -89,6 +93,7 @@ benchmarks:
     - deepseq
     ghc-options:
     - -O2
+    - -fspecialise-aggressively
     - -rtsopts
     - -threaded
     - -with-rtsopts=-N
