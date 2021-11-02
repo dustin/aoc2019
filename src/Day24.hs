@@ -2,7 +2,6 @@
 
 module Day24 where
 
-import           Data.Foldable   (foldMap)
 import qualified Data.Map.Strict as Map
 import           Data.Set        (Set)
 import qualified Data.Set        as Set

@@ -22,11 +22,14 @@ runOne start prog = go (0,0) N mempty (executeIn [start] prog)
       let [c,t] = pausedOuts
           m' = Map.insert pos c m
           dir' = turn t dir
-          pos' = fwd dir' pos in
+          pos' = fwd (inv dir') pos in
         go pos' dir' m' (resume [Map.findWithDefault 0 pos' m] p)
 
     turn 0 = pred'
     turn _ = succ'
+    inv N = S
+    inv S = N
+    inv x = x
 
 displayMap :: Map Point Int -> String
 displayMap m = drawString m' cf

@@ -43,6 +43,13 @@ startingPoint = fst . head . filter ((== '^') . snd) . Map.toList
 
 data Move = L | R | F Int | A | B | C  deriving (Show, Eq, Ord)
 
+fwd' :: Dir -> (Int,Int) -> (Int,Int)
+fwd' dir = fwd (inv dir)
+  where
+    inv N = S
+    inv S = N
+    inv x = x
+
 turtle :: World -> [Move]
 turtle m = opt $ go N (startingPoint m)
   where
@@ -51,15 +58,15 @@ turtle m = opt $ go N (startingPoint m)
     opt (x:xs)       = x : opt xs
 
     go d p
-      | canGoFwd = F 1 : go d (fwd d p)
+      | canGoFwd = F 1 : go d (fwd' d p)
       | canGoRight = R : go (succ' d) p
       | canGoLeft = L : go (pred' d) p
       | otherwise = []
 
       where
-        canGoFwd = canGo (fwd d p)
-        canGoRight = canGo (fwd (succ' d) p)
-        canGoLeft = canGo (fwd (pred' d) p)
+        canGoFwd = canGo (fwd' d p)
+        canGoRight = canGo (fwd' (succ' d) p)
+        canGoLeft = canGo (fwd' (pred' d) p)
 
         canGo p' = Map.lookup p' m == Just '#'
 
